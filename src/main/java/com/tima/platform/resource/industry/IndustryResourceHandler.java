@@ -1,5 +1,6 @@
-package com.tima.platform.resource;
+package com.tima.platform.resource.industry;
 
+import com.tima.platform.model.api.ApiResponse;
 import com.tima.platform.model.api.request.IndustryUpdateRecord;
 import com.tima.platform.model.api.response.IndustryRecord;
 import com.tima.platform.model.api.response.InfluencerCategoryRecord;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+
+import static com.tima.platform.model.api.ApiResponse.buildServerResponse;
 
 /**
  * @Author: Josiah Adetayo
@@ -30,51 +33,27 @@ public class IndustryResourceHandler {
      */
     public Mono<ServerResponse> getIndustries(ServerRequest request)  {
         log.info("Get Registered Industries Requested", request.remoteAddress().orElse(null));
-
-        try {
-            return industryService.getIndustries()
-                    .flatMap(ServerResponse.ok()::bodyValue)
-                    .switchIfEmpty(ServerResponse.badRequest().build());
-        } catch (Exception e) {
-            return ServerResponse.badRequest().build();
-        }
+        return buildServerResponse(industryService.getIndustries());
     }
 
     public Mono<ServerResponse> addNewIndustry(ServerRequest request)  {
         Mono<IndustryRecord> recordMono = request.bodyToMono(IndustryRecord.class);
         log.info("Registered a new industry Requested", request.remoteAddress().orElse(null));
-
-        try {
-            return recordMono.flatMap(industryService::addIndustry)
-                    .flatMap(ServerResponse.ok()::bodyValue)
-                    .switchIfEmpty(ServerResponse.badRequest().build());
-        } catch (Exception e) {
-            return ServerResponse.badRequest().build();
-        }
+        return recordMono
+                .map(industryService::addIndustry)
+                .flatMap(ApiResponse::buildServerResponse);
     }
     public Mono<ServerResponse> updateIndustry(ServerRequest request)  {
         Mono<IndustryUpdateRecord> recordMono = request.bodyToMono(IndustryUpdateRecord.class);
         log.info("Update Industry Requested", request.remoteAddress().orElse(null));
-
-        try {
-            return recordMono.flatMap(industryService::updateIndustry)
-                    .flatMap(ServerResponse.ok()::bodyValue)
-                    .switchIfEmpty(ServerResponse.badRequest().build());
-        } catch (Exception e) {
-            return ServerResponse.badRequest().build();
-        }
+        return recordMono
+                .map(industryService::updateIndustry)
+                .flatMap(ApiResponse::buildServerResponse);
     }
     public Mono<ServerResponse> deleteIndustry(ServerRequest request)  {
         String name = request.pathVariable("name");
         log.info("Delete Industry Requested", request.remoteAddress().orElse(null));
-
-        try {
-            return industryService.deleteIndustry(name)
-                    .flatMap(ServerResponse.ok()::bodyValue)
-                    .switchIfEmpty(ServerResponse.badRequest().build());
-        } catch (Exception e) {
-            return ServerResponse.badRequest().build();
-        }
+        return buildServerResponse(industryService.deleteIndustry(name));
     }
 
     /**
@@ -82,51 +61,27 @@ public class IndustryResourceHandler {
      */
     public Mono<ServerResponse> getInfluencerCategories(ServerRequest request)  {
         log.info("Get Registered Influeencer Industries Requested", request.remoteAddress().orElse(null));
-
-        try {
-            return categoryService.getIndustries()
-                    .flatMap(ServerResponse.ok()::bodyValue)
-                    .switchIfEmpty(ServerResponse.badRequest().build());
-        } catch (Exception e) {
-            return ServerResponse.badRequest().build();
-        }
+        return buildServerResponse(categoryService.getIndustries());
     }
 
     public Mono<ServerResponse> addNewInfluencerCategory(ServerRequest request)  {
         Mono<InfluencerCategoryRecord> recordMono = request.bodyToMono(InfluencerCategoryRecord.class);
         log.info("Registered a new industry Requested", request.remoteAddress().orElse(null));
-
-        try {
-            return recordMono.flatMap(categoryService::addIndustry)
-                    .flatMap(ServerResponse.ok()::bodyValue)
-                    .switchIfEmpty(ServerResponse.badRequest().build());
-        } catch (Exception e) {
-            return ServerResponse.badRequest().build();
-        }
+        return recordMono
+                .map(categoryService::addIndustry)
+                .flatMap(ApiResponse::buildServerResponse);
     }
     public Mono<ServerResponse> updateInfluencerCategory(ServerRequest request)  {
         Mono<IndustryUpdateRecord> recordMono = request.bodyToMono(IndustryUpdateRecord.class);
         log.info("Update Influencer Industry Requested", request.remoteAddress().orElse(null));
-
-        try {
-            return recordMono.flatMap(categoryService::updateInfluencerCategory)
-                    .flatMap(ServerResponse.ok()::bodyValue)
-                    .switchIfEmpty(ServerResponse.badRequest().build());
-        } catch (Exception e) {
-            return ServerResponse.badRequest().build();
-        }
+        return recordMono
+                .map(categoryService::updateInfluencerCategory)
+                .flatMap(ApiResponse::buildServerResponse);
     }
     public Mono<ServerResponse> deleteInfluencerCategory(ServerRequest request)  {
         String name = request.pathVariable("name");
         log.info("Delete Influencer Industry Requested", request.remoteAddress().orElse(null));
-
-        try {
-            return categoryService.deleteIndustry(name)
-                    .flatMap(ServerResponse.ok()::bodyValue)
-                    .switchIfEmpty(ServerResponse.badRequest().build());
-        } catch (Exception e) {
-            return ServerResponse.badRequest().build();
-        }
+        return buildServerResponse(categoryService.deleteIndustry(name));
     }
 
 }

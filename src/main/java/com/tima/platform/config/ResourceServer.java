@@ -41,6 +41,8 @@ public class ResourceServer {
     private static final String[] AUTH_WHITELIST = {
             "/v1/industries",
             "/v1/industries/influencer",
+            "/v1/settings/audience",
+            "/v1/settings/creative",
             // other public endpoints of your API may be appended to this array
     };
 }
