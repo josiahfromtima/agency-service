@@ -1,0 +1,25 @@
+package com.tima.platform.model.api.response;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.tima.platform.model.constant.ApplicationStatus;
+import lombok.Builder;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+
+/**
+ * @Author: Josiah Adetayo
+ * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
+ * @Date: 12/20/23
+ */
+@Builder
+@JsonIgnoreProperties
+public record InfluencerApplicationRecord(String applicationId, String campaignPublicId, String campaignName,
+                                          BigDecimal campaignBudget, String campaignDescription, String username,
+                                          String fullName, String email, String phoneNumber, String profilePicture,
+
+                                          String socialMediaPlatform, String collaboration, String userExperience,
+                                          String userExperienceBrief, String userMotivationBrief, ApplicationStatus status,
+                                          LocalDate applicationDate, String approvedBy, String submittedBy,
+                                          String reviewedBy, Instant createdOn, Instant editedOn) {}

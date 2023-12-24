@@ -92,6 +92,16 @@ public class HttpConnectorService {
                 .bodyToMono(returnType);
     }
 
+    public <T> Mono<T> get(String endpoint, Map<String, String> headers, Class<T> returnType) {
+        return webClient.get()
+                .uri(endpoint)
+                .headers(httpHeaders -> headers.forEach(httpHeaders::set)  )
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, this::handleClientError)
+                .onStatus(HttpStatusCode::is5xxServerError, this::handleClientError)
+                .bodyToMono(returnType);
+    }
+
     public <T> Mono<T> get(String endpoint, Object pathVariable, Class<T> returnType) {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder.path(endpoint).build(pathVariable))
