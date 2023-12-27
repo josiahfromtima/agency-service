@@ -46,6 +46,7 @@ public class CampaignCreativeService {
                 .flatMap(campaignCreative -> {
                     CampaignCreative existingRecords = CampaignCreativeConverter.mapToEntity(audienceRecord);
                     existingRecords.setId(campaignCreative.getId());
+                    existingRecords.setCreatedOn(campaignCreative.getCreatedOn());
                     return creativeRepository.save(existingRecords);
                 })
                 .switchIfEmpty(creativeRepository.save(CampaignCreativeConverter.mapToEntity(audienceRecord)))

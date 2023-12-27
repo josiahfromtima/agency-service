@@ -2,8 +2,6 @@ package com.tima.platform.util;
 
 import lombok.Data;
 
-import java.math.BigDecimal;
-
 /**
  * @Author: Josiah Adetayo
  * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
@@ -12,11 +10,9 @@ import java.math.BigDecimal;
 @Data
 public class CampaignSearchSetting {
     private String category;
-    private String type;
-    private BigDecimal lowerBoundBudget;
-    private BigDecimal upperBoundBudget;
-    private String audience;
-    private String status;
+    private String audienceSize;
+    private String audienceAge;
+    private String audienceLocation;
 
     private CampaignSearchSetting() {}
 
@@ -29,26 +25,19 @@ public class CampaignSearchSetting {
         return this;
     }
 
-    public CampaignSearchSetting type(String type) {
-        this.type = type;
+    public CampaignSearchSetting audienceSize(String audienceSize) {
+        this.audienceSize = audienceSize;
         return this;
     }
 
-    public CampaignSearchSetting lowerBoundBudget(BigDecimal lowerBoundBudget) {
-        this.lowerBoundBudget = lowerBoundBudget;
+    public CampaignSearchSetting audienceAge(String audienceAge) {
+        this.audienceAge = audienceAge;
         return this;
     }
 
-    public CampaignSearchSetting upperBoundBudget(BigDecimal upperBoundBudget) {
-        this.upperBoundBudget = upperBoundBudget;
+    public CampaignSearchSetting audienceLocation(String audienceLocation) {
+        this.audienceLocation = audienceLocation;
         return this;
     }
-    public CampaignSearchSetting audience(String audience) {
-        this.audience = audience;
-        return this;
-    }
-    public CampaignSearchSetting status(String status) {
-        this.status = status;
-        return this;
-    }
+
 }

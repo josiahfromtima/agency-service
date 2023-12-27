@@ -156,6 +156,7 @@ public class InfluencerApplicationService {
                     modified.setId(application.getId());
                     modified.setStatus(status);
                     modified.setReviewedBy(publicId);
+                    modified.setCreatedOn(application.getCreatedOn());
                     if(ApplicationStatus.APPROVED == status)  modified.setApprovedBy(publicId);
                     return applicationRepository.save(modified);
                 })

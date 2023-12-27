@@ -53,6 +53,7 @@ public class CampaignRegistrationConverter {
     public static synchronized CampaignRegistrationRecord mapToRecord(CampaignRegistration entity) {
         return  CampaignRegistrationRecord.builder()
                 .publicId(entity.getPublicId())
+                .status(entity.getStatus())
                 .overview(CampaignOverviewRecord.builder()
                         .name(entity.getName())
                         .briefDescription(entity.getBriefDescription())

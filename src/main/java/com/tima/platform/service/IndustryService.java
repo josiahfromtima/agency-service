@@ -33,6 +33,7 @@ public class IndustryService {
     private static final String INVALID_INDUSTRY = "The industry name is invalid";
     private static final String ERROR_MSG = "The industry record mutation could not be performed";
 
+
     public Mono<AppResponse> getIndustries() {
         log.info("Getting ALl Industry Records...");
         return industryRepository.findAll()

@@ -1,13 +1,15 @@
 package com.tima.platform.repository;
 
 import com.tima.platform.domain.CampaignRegistration;
-import com.tima.platform.util.CampaignSearchSetting;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+import static com.tima.platform.repository.projection.NativeSql.CAMPAIGN_SEARCH_WITH_FILTER;
 
 /**
  * @Author: Josiah Adetayo
@@ -17,13 +19,11 @@ import java.math.BigDecimal;
 public interface CampaignRegistrationRepository extends ReactiveCrudRepository<CampaignRegistration, Integer> {
     Mono<CampaignRegistration> findByPublicId(String publicId);
 
-    @Query("SELECT * FROM campaign_registration WHERE lower(influencer_category) LIKE :category OR " +
-            "lower(content_type) LIKE :type OR " +
-            "planned_budget BETWEEN :lower AND :upper  OR " +
-            "lower(audience_age_group) LIKE :audience OR " +
-            "status = :status")
-    Flux<CampaignRegistration> getSearchResult(String category, String type, BigDecimal lower,
-                                               BigDecimal upper, String audience, String status);
+    Flux<CampaignRegistration> findByEndDateAfterOrEndDate(LocalDate today, LocalDate thisDay);
+    Flux<CampaignRegistration> findByIdIn(List<Integer> ids);
+
+    @Query(CAMPAIGN_SEARCH_WITH_FILTER)
+    Flux<CampaignRegistration> getSearchResult(String category, String size, String age, String location);
 
 
 }

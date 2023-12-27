@@ -5,6 +5,8 @@ import com.tima.platform.model.api.request.CampaignInfluencerRecord;
 import com.tima.platform.model.api.request.CampaignOverviewRecord;
 import lombok.Builder;
 
+import java.time.Instant;
+
 /**
  * @Author: Josiah Adetayo
  * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
@@ -13,4 +15,5 @@ import lombok.Builder;
 @Builder
 public record CampaignRegistrationRecord(String publicId, CampaignOverviewRecord overview,
                                          CampaignInfluencerRecord influencer,
-                                         CampaignCreativeRecord creative) {}
+                                         CampaignCreativeRecord creative,
+                                         Short status, Instant createdOn) {}

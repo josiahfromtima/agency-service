@@ -22,6 +22,7 @@ public class CampaignResourceConfig {
     public static final String APPLICATION_BASE = API_V1_URL + "/applications";
     public static final String GET_TYPES = CAMPAIGN_BASE + "/segment";
     public static final String SEARCH_CAMPAIGNS = CAMPAIGN_BASE + "/search/filter";
+    public static final String TOP_CAMPAIGNS = CAMPAIGN_BASE + "/search/top";
     public static final String GET_CAMPAIGN = CAMPAIGN_BASE + "/{publicId}";
     public static final String CREATE_SEGMENT = CAMPAIGN_BASE + "/{segment}";
     public static final String GET_STATUS_TYPES = APPLICATION_BASE + "/statuses";
@@ -39,6 +40,7 @@ public class CampaignResourceConfig {
                 .GET(GET_CAMPAIGN, accept(MediaType.APPLICATION_JSON), handler::getRegistration)
                 .GET(CAMPAIGN_BASE, accept(MediaType.APPLICATION_JSON), handler::getRegistrations)
                 .GET(SEARCH_CAMPAIGNS, accept(MediaType.APPLICATION_JSON), handler::searchForCampaigns)
+                .GET(TOP_CAMPAIGNS, accept(MediaType.APPLICATION_JSON), handler::topCampaigns)
                 .POST(CAMPAIGN_BASE, accept(MediaType.APPLICATION_JSON)
                         .and(contentType(MediaType.APPLICATION_JSON)), handler::addCampaign)
                 .PUT(CREATE_SEGMENT, accept(MediaType.APPLICATION_JSON)

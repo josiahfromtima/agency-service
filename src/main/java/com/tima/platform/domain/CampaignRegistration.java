@@ -54,7 +54,7 @@ public class CampaignRegistration implements Serializable, Persistable<Integer> 
     private String thumbnail;
     private Boolean visibility;
     private String publicId;
-    private String status;
+    private Short status;
     private Instant createdOn;
     private Instant editedOn;
 

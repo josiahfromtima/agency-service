@@ -6,6 +6,7 @@ import com.tima.platform.model.api.ApiResponse;
 import com.tima.platform.model.api.response.CampaignRegistrationRecord;
 import com.tima.platform.model.api.response.InfluencerApplicationRecord;
 import com.tima.platform.model.constant.RegistrationType;
+import com.tima.platform.service.CampaignAggregateService;
 import com.tima.platform.service.CampaignRegistrationService;
 import com.tima.platform.service.InfluencerApplicationService;
 import com.tima.platform.util.LoggerHelper;
@@ -29,6 +30,7 @@ public class CampaignResourceHandler {
     LoggerHelper log = LoggerHelper.newInstance(CampaignResourceHandler.class.getName());
     private final CampaignRegistrationService registrationService;
     private final InfluencerApplicationService applicationService;
+    private final CampaignAggregateService aggregateService;
 
     /**
      *  This section marks the campaign registration activities
@@ -81,6 +83,11 @@ public class CampaignResourceHandler {
     public Mono<ServerResponse> searchForCampaigns(ServerRequest request)  {
         log.info("Search for Campaigns Requested ", request.remoteAddress().orElse(null));
         return buildServerResponse(registrationService.getRegistrationsBySearch(searchSettings(request)));
+    }
+
+    public Mono<ServerResponse> topCampaigns(ServerRequest request)  {
+        log.info("Get Top Campaigns Requested ", request.remoteAddress().orElse(null));
+        return buildServerResponse(aggregateService.getTopRegistrations());
     }
 
     /**

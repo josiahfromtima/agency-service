@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.tima.platform.exception.ApiErrorHandler.handleOnErrorResume;
+import static com.tima.platform.model.security.TimaAuthority.ADMIN_BRAND;
 import static com.tima.platform.model.security.TimaAuthority.ADMIN_BRAND_INFLUENCER;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
@@ -70,7 +71,7 @@ public class CampaignRegistrationService {
                 .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG));
     }
 
-    @PreAuthorize(ADMIN_BRAND_INFLUENCER)
+    @PreAuthorize(ADMIN_BRAND)
     public Mono<AppResponse> addCampaignRegistration(CampaignRegistrationRecord registrationRecord) {
         log.info("Save full Campaign Registration Record ");
         return registrationRepository.save(CampaignRegistrationConverter.mapToEntity(registrationRecord))
@@ -79,7 +80,7 @@ public class CampaignRegistrationService {
                 .onErrorResume(t -> handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
     }
 
-    @PreAuthorize(ADMIN_BRAND_INFLUENCER)
+    @PreAuthorize(ADMIN_BRAND)
     public Mono<AppResponse> addCampaignRegistration(JsonNode jsonNode, RegistrationType type) {
         log.info("Save Part Campaign Registration Record ", jsonNode);
         if(!RegistrationType.OVERVIEW.equals(type) && jsonNode.at("/publicId").asText().isBlank()) {
@@ -98,6 +99,7 @@ public class CampaignRegistrationService {
                         CampaignRegistration modified = CampaignRegistrationConverter.mapToEntity
                                 (buildRecord(foundRecord, registrationRecord, type));
                         modified.setId(campaignRegistration.getId());
+                        modified.setCreatedOn(campaignRegistration.getCreatedOn());
                         return registrationRepository.save(modified);
                     }).map(CampaignRegistrationConverter::mapToRecord)
                     .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG))
@@ -105,19 +107,21 @@ public class CampaignRegistrationService {
         }
     }
 
-    @PreAuthorize(ADMIN_BRAND_INFLUENCER)
+    @PreAuthorize(ADMIN_BRAND)
     public Mono<AppResponse> updateCampaignRegistration(CampaignRegistrationRecord registrationRecord) {
         log.info("Update full Campaign Registration Record ");
         return getRegistration(registrationRecord.publicId())
                 .flatMap(campaignRegistration -> {
                     CampaignRegistration modified = CampaignRegistrationConverter.mapToEntity(registrationRecord);
                     modified.setId(campaignRegistration.getId());
+                    modified.setCreatedOn(campaignRegistration.getCreatedOn());
                     return registrationRepository.save(modified);
                 }).map(CampaignRegistrationConverter::mapToRecord)
                 .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG))
                 .onErrorResume(t -> handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
     }
 
+    @PreAuthorize(ADMIN_BRAND)
     public Mono<AppResponse> deleteCampaignRegistration(String publicId) {
         log.info("Delete Campaign Registration Record ");
         return getRegistration(publicId)
@@ -125,6 +129,7 @@ public class CampaignRegistrationService {
                 .then(Mono.fromCallable(() -> AppUtil.buildAppResponse(publicId + " Deleted", CAMPAIGN_MSG)));
     }
 
+    @PreAuthorize(ADMIN_BRAND_INFLUENCER)
     public Mono<AppResponse> getRegistrationsBySearch(CampaignSearchSetting setting) {
         log.info("Get Search Campaign Registration Record ", setting);
         return getRegistrationSearch(setting)
@@ -140,12 +145,11 @@ public class CampaignRegistrationService {
 
     private Flux<CampaignRegistration> getRegistrationSearch(CampaignSearchSetting setting) {
         setting.setCategory(padSearchParam(setting.getCategory()));
-        setting.setType(padSearchParam(setting.getType()));
-        setting.setAudience(padSearchParam(setting.getAudience()));
-        setting.setStatus(padSearchParam(setting.getStatus()));
-        return registrationRepository.getSearchResult(setting.getCategory(), setting.getType(),
-                        setting.getLowerBoundBudget(), setting.getUpperBoundBudget(),
-                        setting.getAudience(), setting.getStatus())
+        setting.setAudienceAge(padSearchParam(setting.getAudienceAge()));
+        setting.setAudienceSize(padSearchParam(setting.getAudienceSize()));
+        setting.setAudienceLocation(padSearchParam(setting.getAudienceLocation()));
+        return registrationRepository.getSearchResult(setting.getCategory(), setting.getAudienceSize(),
+                        setting.getAudienceAge(), setting.getAudienceLocation())
                 .switchIfEmpty(handleOnErrorResume(new AppException(INVALID_CAMPAIGN), BAD_REQUEST.value()));
     }
 

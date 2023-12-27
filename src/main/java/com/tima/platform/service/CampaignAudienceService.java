@@ -46,6 +46,7 @@ public class CampaignAudienceService {
                 .flatMap(campaignAudience -> {
                     CampaignAudience existingRecords = CampaignAudienceConverter.mapToEntity(audienceRecord);
                     existingRecords.setId(campaignAudience.getId());
+                    existingRecords.setCreatedOn(campaignAudience.getCreatedOn());
                     return audienceRepository.save(existingRecords);
                 })
                 .switchIfEmpty(audienceRepository.save(CampaignAudienceConverter.mapToEntity(audienceRecord)))

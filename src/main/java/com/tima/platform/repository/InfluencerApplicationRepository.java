@@ -3,11 +3,14 @@ package com.tima.platform.repository;
 import com.tima.platform.domain.InfluencerApplication;
 import com.tima.platform.model.constant.ApplicationStatus;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+
+import static com.tima.platform.repository.projection.NativeSql.TOP_CAMPAIGN_STATEMENT;
 
 /**
  * @Author: Josiah Adetayo
@@ -20,6 +23,8 @@ public interface InfluencerApplicationRepository extends ReactiveCrudRepository<
     Flux<InfluencerApplication> findByCampaignId(Integer id, Pageable pageable);
     Flux<InfluencerApplication> findBySubmittedBy(String publicId, Pageable pageable);
     Flux<InfluencerApplication> findByApplicationDateBetween(LocalDate startDate, LocalDate endDate, Pageable pageable);
-
     Mono<InfluencerApplication> findByApplicationId(String appId);
+
+    @Query(TOP_CAMPAIGN_STATEMENT)
+    <T> Flux<T> getTopCampaign(int top, Class<T> type);
 }

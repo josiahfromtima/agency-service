@@ -8,8 +8,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
-
 /**
  * @Author: Josiah Adetayo
  * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
@@ -56,10 +54,8 @@ public class ApiResponse {
     public static CampaignSearchSetting searchSettings(ServerRequest request) {
         return CampaignSearchSetting.instance()
                 .category(request.queryParam("category").orElse(""))
-                .type(request.queryParam("type").orElse(""))
-                .lowerBoundBudget(new BigDecimal(request.queryParam("startBudget").orElse("0")))
-                .upperBoundBudget(new BigDecimal(request.queryParam("endBudget").orElse("0")))
-                .audience(request.queryParam("audience").orElse(""))
-                .status(request.queryParam("status").orElse(""));
+                .audienceSize(request.queryParam("audienceSize").orElse(""))
+                .audienceAge(request.queryParam("audienceAge").orElse(""))
+                .audienceLocation(request.queryParam("audienceLocation").orElse("0"));
     }
 }

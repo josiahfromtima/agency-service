@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
  * @Date: 12/6/23
  */
+@EnableScheduling
 @Configuration
 public class ProjectConfig {
     @Bean
