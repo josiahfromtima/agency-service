@@ -11,4 +11,4 @@ import java.util.List;
  * @Date: 12/26/23
  */
 @Builder
-public record ClientIndustryRecord(String userPublicId, List<String> selectedIndustries, Instant createdOn) {}
+public record ClientIndustryRecord(String userPublicId, List<String> selectedIndustries) {}

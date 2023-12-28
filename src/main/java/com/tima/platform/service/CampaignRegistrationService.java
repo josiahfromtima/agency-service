@@ -16,6 +16,7 @@ import com.tima.platform.util.AppUtil;
 import com.tima.platform.util.CampaignSearchSetting;
 import com.tima.platform.util.LoggerHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -41,6 +42,13 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 public class CampaignRegistrationService {
     private final LoggerHelper log = LoggerHelper.newInstance(CampaignRegistrationService.class.getName());
     private final CampaignRegistrationRepository registrationRepository;
+
+    @Value("${aws.s3.url}")
+    private String baseResourceUrl;
+    @Value("${aws.s3.resource.thumbnail}")
+    private String thumbnailFolder;
+    @Value("${aws.s3.image-ext}")
+    private String defaultFileExtension;
 
     private static final String CAMPAIGN_MSG = "Campaign request executed successfully";
     private static final String INVALID_CAMPAIGN = "Selected campaign is not found";
@@ -74,7 +82,7 @@ public class CampaignRegistrationService {
     @PreAuthorize(ADMIN_BRAND)
     public Mono<AppResponse> addCampaignRegistration(CampaignRegistrationRecord registrationRecord) {
         log.info("Save full Campaign Registration Record ");
-        return registrationRepository.save(CampaignRegistrationConverter.mapToEntity(registrationRecord))
+        return registrationRepository.save(resolve(CampaignRegistrationConverter.mapToEntity(registrationRecord)) )
                 .map(CampaignRegistrationConverter::mapToRecord)
                 .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG))
                 .onErrorResume(t -> handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
@@ -96,8 +104,8 @@ public class CampaignRegistrationService {
                         CampaignRegistrationRecord registrationRecord = registerPart(jsonNode, type);
                         CampaignRegistrationRecord foundRecord
                                 = CampaignRegistrationConverter.mapToRecord(campaignRegistration);
-                        CampaignRegistration modified = CampaignRegistrationConverter.mapToEntity
-                                (buildRecord(foundRecord, registrationRecord, type));
+                        CampaignRegistration modified = resolve(CampaignRegistrationConverter.mapToEntity
+                                (buildRecord(foundRecord, registrationRecord, type)) );
                         modified.setId(campaignRegistration.getId());
                         modified.setCreatedOn(campaignRegistration.getCreatedOn());
                         return registrationRepository.save(modified);
@@ -112,7 +120,8 @@ public class CampaignRegistrationService {
         log.info("Update full Campaign Registration Record ");
         return getRegistration(registrationRecord.publicId())
                 .flatMap(campaignRegistration -> {
-                    CampaignRegistration modified = CampaignRegistrationConverter.mapToEntity(registrationRecord);
+                    CampaignRegistration modified
+                            = resolve(CampaignRegistrationConverter.mapToEntity(registrationRecord));
                     modified.setId(campaignRegistration.getId());
                     modified.setCreatedOn(campaignRegistration.getCreatedOn());
                     return registrationRepository.save(modified);
@@ -225,6 +234,11 @@ public class CampaignRegistrationService {
         return foundRecord;
     }
 
+    private CampaignRegistration resolve(CampaignRegistration registration) {
+        registration.setThumbnail(resourceUrl(registration.getThumbnail(), thumbnailFolder));
+        return registration;
+    }
+
     private static List<String> json(String value) {
         return AppUtil.gsonInstance().fromJson(value, new TypeToken<List<String>>(){}.getType());
     }
@@ -234,5 +248,14 @@ public class CampaignRegistrationService {
 
     private String padSearchParam(String value) {
         return "%" + value.toLowerCase() + "%";
+    }
+
+    private String resourceUrl(String file, String folder) {
+        return baseResourceUrl + folder + checkExt(file);
+    }
+
+    private String checkExt(String file) {
+        if(file.contains(".jpeg") || file.contains(".jpg") || file.contains(".png")) return file;
+        else return file + defaultFileExtension;
     }
 }

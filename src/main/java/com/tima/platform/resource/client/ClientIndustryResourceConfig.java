@@ -19,13 +19,10 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 public class ClientIndustryResourceConfig {
     public static final String API_V1_URL = "/v1";
     public static final String CLIENT_BASE = API_V1_URL + "/user/industry";
-    public static final String ADD_CLIENT = CLIENT_BASE + "/_add";
 
     @Bean
     public RouterFunction<ServerResponse> clientEndpointHandler(ClientIndustryResourceHandler handler) {
         return route()
-                .POST(ADD_CLIENT, accept(MediaType.APPLICATION_JSON)
-                        .and(contentType(MediaType.APPLICATION_JSON)), handler::addClientIndustry)
                 .PUT(CLIENT_BASE, accept(MediaType.APPLICATION_JSON)
                         .and(contentType(MediaType.APPLICATION_JSON)), handler::updateIndustry)
                 .DELETE(CLIENT_BASE, accept(MediaType.APPLICATION_JSON), handler::deleteIndustry)

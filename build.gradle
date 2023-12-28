@@ -44,6 +44,8 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-stream-binder-rabbit'
     // Validation
     implementation "javax.validation:validation-api:2.0.1.Final"
+    // AWS SDK
+    implementation "software.amazon.awssdk:s3:2.20.52"
     // Third Party Mapper and Code Generator (Lombok)
     implementation "com.google.code.gson:gson"
     compileOnly 'org.projectlombok:lombok'

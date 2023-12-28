@@ -27,7 +27,6 @@ public class ClientIndustryConverter {
         return  ClientIndustryRecord.builder()
                 .userPublicId(entity.getUserPublicId())
                 .selectedIndustries(json(entity.getSelectedIndustries()))
-                .createdOn(entity.getCreatedOn())
                 .build();
     }
 

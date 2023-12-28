@@ -17,4 +17,9 @@ public interface NativeSql {
             "lower(audience_size) LIKE :size OR " +
             "lower(audience_age_group) LIKE :age OR " +
             "lower(audience_location) LIKE :location ";
+
+    String RECOMMENDED_CAMPAIGN_STATEMENT = "SELECT * FROM campaign_registration " +
+            "WHERE lower(influencer_category) LIKE :param1 OR " +
+            "lower(influencer_category) LIKE :param2 OR " +
+            "lower(influencer_category) LIKE :param3 ";
 }

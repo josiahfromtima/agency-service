@@ -9,8 +9,10 @@ import com.tima.platform.model.constant.RegistrationType;
 import com.tima.platform.service.CampaignAggregateService;
 import com.tima.platform.service.CampaignRegistrationService;
 import com.tima.platform.service.InfluencerApplicationService;
+import com.tima.platform.service.aws.s3.AwsS3Service;
 import com.tima.platform.util.LoggerHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -28,9 +30,22 @@ import static com.tima.platform.model.api.ApiResponse.*;
 @RequiredArgsConstructor
 public class CampaignResourceHandler {
     LoggerHelper log = LoggerHelper.newInstance(CampaignResourceHandler.class.getName());
+    private final AwsS3Service awsS3Service;
     private final CampaignRegistrationService registrationService;
     private final InfluencerApplicationService applicationService;
     private final CampaignAggregateService aggregateService;
+
+    @Value("${aws.s3.resource.thumbnail}")
+    private String thumbnailFolder;
+
+    /**
+     *  This section is the user generated signed URL
+     */
+    public Mono<ServerResponse> getSignedThumbnailPicture(ServerRequest request)  {
+        String keyName = request.pathVariable("keyName");
+        log.info("Get Signed Thumbnail Picture URL Requested ", request.remoteAddress().orElse(null));
+        return buildServerResponse(awsS3Service.getSignedUrl(thumbnailFolder, keyName));
+    }
 
     /**
      *  This section marks the campaign registration activities
@@ -88,6 +103,15 @@ public class CampaignResourceHandler {
     public Mono<ServerResponse> topCampaigns(ServerRequest request)  {
         log.info("Get Top Campaigns Requested ", request.remoteAddress().orElse(null));
         return buildServerResponse(aggregateService.getTopRegistrations());
+    }
+
+    public Mono<ServerResponse> recommendedCampaigns(ServerRequest request)  {
+        Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
+        log.info("Get Recommended Campaigns Requested ", request.remoteAddress().orElse(null));
+        return jwtAuthToken
+                .map(ApiResponse::getPublicIdFromToken)
+                .map(aggregateService::getRecommendedRegistrations)
+                .flatMap(ApiResponse::buildServerResponse);
     }
 
     /**

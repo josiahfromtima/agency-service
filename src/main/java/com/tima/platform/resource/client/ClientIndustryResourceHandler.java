@@ -37,13 +37,6 @@ public class ClientIndustryResourceHandler {
                 .flatMap(ApiResponse::buildServerResponse);
     }
 
-    public Mono<ServerResponse> addClientIndustry(ServerRequest request)  {
-        Mono<ClientIndustryRecord> recordMono = request.bodyToMono(ClientIndustryRecord.class);
-        log.info("Registered new client industry Requested", request.remoteAddress().orElse(null));
-        return  recordMono
-                .map(industryService::addClientIndustry)
-                .flatMap(ApiResponse::buildServerResponse);
-    }
     public Mono<ServerResponse> updateIndustry(ServerRequest request)  {
         Mono<JsonNode> recordMono = request.bodyToMono(JsonNode.class);
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);

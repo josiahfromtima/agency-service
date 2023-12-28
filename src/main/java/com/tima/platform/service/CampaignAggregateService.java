@@ -1,9 +1,12 @@
 package com.tima.platform.service;
 
 import com.tima.platform.converter.CampaignRegistrationConverter;
+import com.tima.platform.converter.ClientIndustryConverter;
 import com.tima.platform.domain.CampaignRegistration;
 import com.tima.platform.model.api.AppResponse;
+import com.tima.platform.model.api.response.ClientIndustryRecord;
 import com.tima.platform.repository.CampaignRegistrationRepository;
+import com.tima.platform.repository.ClientIndustryRepository;
 import com.tima.platform.repository.InfluencerApplicationRepository;
 import com.tima.platform.repository.projection.TopCampaign;
 import com.tima.platform.util.AppUtil;
@@ -29,6 +32,7 @@ public class CampaignAggregateService {
     private final LoggerHelper log = LoggerHelper.newInstance(CampaignRegistrationService.class.getName());
     private final CampaignRegistrationRepository registrationRepository;
     private final InfluencerApplicationRepository applicationRepository;
+    private final ClientIndustryRepository industryRepository;
 
     private static final String CAMPAIGN_MSG = "Campaign request executed successfully";
     private static final int TOP_SIZE = 3;
@@ -43,8 +47,15 @@ public class CampaignAggregateService {
                 .map(CampaignRegistrationConverter::mapToRecords)
                 .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG));
     }
-
-
+    @PreAuthorize(ADMIN_BRAND_INFLUENCER)
+    public Mono<AppResponse> getRecommendedRegistrations(String publicId) {
+        log.info("Get Recommended Campaigns  ");
+        return getClientIndustry(publicId)
+                .map(this::recommendedCampaign)
+                .flatMap(Flux::collectList)
+                .map(CampaignRegistrationConverter::mapToRecords)
+                .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG));
+    }
 
     private Flux<TopCampaign> getTopCampaigns() {
         return applicationRepository.getTopCampaign(TOP_SIZE, TopCampaign.class);
@@ -59,5 +70,25 @@ public class CampaignAggregateService {
         return topCampaigns.stream()
                 .map(TopCampaign::campaign)
                 .toList();
+    }
+
+    private Mono<List<String>> getClientIndustry(String publicId) {
+        return industryRepository.findByUserPublicId(publicId)
+                .map(ClientIndustryConverter::mapToRecord)
+                .map(ClientIndustryRecord::selectedIndustries);
+    }
+
+//    private  industryList(ClientIndustryRecord industryRecord) {
+//        return industryRecord.selectedIndustries();
+//    }
+
+    private Flux<CampaignRegistration> recommendedCampaign(List<String> params) {
+        return registrationRepository.getRecommendedCampaign(getParam(0, params),
+                getParam(1, params), getParam(2, params));
+    }
+
+    private String getParam(int index, List<String> items) {
+        if(items.size() <= index) return "";
+        return "%"+items.get(index).toLowerCase()+"%";
     }
 }
