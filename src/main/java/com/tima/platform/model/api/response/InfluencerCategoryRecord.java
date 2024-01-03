@@ -1,5 +1,6 @@
 package com.tima.platform.model.api.response;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 /**
@@ -8,5 +9,9 @@ import lombok.Builder;
  * @Date: 12/12/23
  */
 @Builder
-public record InfluencerCategoryRecord(String name, String description) {
+public record InfluencerCategoryRecord(
+        @NotNull(message = "Name is Required")
+        String name,
+        @NotNull(message = "Description is Required")
+        String description) {
 }

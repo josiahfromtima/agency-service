@@ -17,8 +17,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.List;
 
+import static com.tima.platform.model.security.TimaAuthority.ADMIN_BRAND;
 import static com.tima.platform.model.security.TimaAuthority.ADMIN_BRAND_INFLUENCER;
 
 /**
@@ -55,6 +57,22 @@ public class CampaignAggregateService {
                 .flatMap(Flux::collectList)
                 .map(CampaignRegistrationConverter::mapToRecords)
                 .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG));
+    }
+
+    @PreAuthorize(ADMIN_BRAND)
+    public Mono<AppResponse> getRegistrationBudgetByUserId(String id) {
+        log.info("Get Campaign Registrations for user Record ", id);
+        return registrationRepository.findByCreatedBy(id)
+                .collectList()
+                .map(this::getTotalBudget)
+                .map(total -> AppUtil.buildAppResponse(total, CAMPAIGN_MSG));
+    }
+
+    private BigDecimal getTotalBudget(List<CampaignRegistration> registration) {
+        return registration
+                .stream()
+                .map(CampaignRegistration::getPlannedBudget)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private Flux<TopCampaign> getTopCampaigns() {

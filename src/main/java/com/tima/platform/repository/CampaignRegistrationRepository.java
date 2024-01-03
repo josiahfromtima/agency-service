@@ -22,6 +22,8 @@ public interface CampaignRegistrationRepository extends ReactiveCrudRepository<C
 
     Flux<CampaignRegistration> findByEndDateAfterOrEndDate(LocalDate today, LocalDate thisDay);
     Flux<CampaignRegistration> findByIdIn(List<Integer> ids);
+
+    Flux<CampaignRegistration> findByCreatedBy(String publicId);
     @Query(RECOMMENDED_CAMPAIGN_STATEMENT)
     Flux<CampaignRegistration> getRecommendedCampaign(String param1, String param2, String param3);
 

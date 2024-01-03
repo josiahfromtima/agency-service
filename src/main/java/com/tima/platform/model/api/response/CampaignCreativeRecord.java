@@ -1,5 +1,6 @@
 package com.tima.platform.model.api.response;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 import java.util.List;
@@ -10,5 +11,14 @@ import java.util.List;
  * @Date: 12/19/23
  */
 @Builder
-public record CampaignCreativeRecord(List<String> contentType, List<String> contentPlacement, List<String> creativeTone,
-                                     List<String> objectiveAwareness, List<String> objectiveAcquisition) {}
+public record CampaignCreativeRecord(
+        @NotNull(message = "Content Type is Required")
+        List<String> contentType,
+        @NotNull(message = "Content Placement is Required")
+        List<String> contentPlacement,
+        @NotNull(message = "Creative Tone is Required")
+        List<String> creativeTone,
+        @NotNull(message = "Objective Awareness is Required")
+        List<String> objectiveAwareness,
+        @NotNull(message = "Objective Acquisition is Required")
+        List<String> objectiveAcquisition) {}

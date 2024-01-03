@@ -1,5 +1,7 @@
 package com.tima.platform.model.api.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 import java.util.List;
@@ -10,6 +12,13 @@ import java.util.List;
  * @Date: 12/19/23
  */
 @Builder
-public record CampaignInfluencerRecord(List<String> influencerCategory, List<String> audienceSize,
-                                       List<String> audienceGender, List<String> audienceAgeGroup,
-                                       List<String> audienceLocation) {}
+public record CampaignInfluencerRecord(@NotNull(message = "Influencer Category is Required")
+                                       List< @NotBlank String> influencerCategory,
+                                       @NotNull(message = "Audience Size is Required")
+                                       List<@NotBlank String> audienceSize,
+                                       @NotNull(message = "Audience Gender is Required")
+                                       List<@NotBlank String> audienceGender,
+                                       @NotNull(message = "Audience Age Group is Required")
+                                       List<@NotBlank String> audienceAgeGroup,
+                                       @NotNull(message = "Audience Location is Required")
+                                       List<@NotBlank String> audienceLocation) {}

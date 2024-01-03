@@ -25,6 +25,7 @@ public class CampaignResourceConfig {
     public static final String SEARCH_CAMPAIGNS = CAMPAIGN_BASE + "/search/filter";
     public static final String TOP_CAMPAIGNS = CAMPAIGN_BASE + "/search/top";
     public static final String RECOMMENDED_CAMPAIGNS = CAMPAIGN_BASE + "/search/recommendation";
+    public static final String TOTAL_BUDGET_CAMPAIGNS = CAMPAIGN_BASE + "/budget/total";
     public static final String GET_CAMPAIGN = CAMPAIGN_BASE + "/{publicId}";
     public static final String CREATE_SEGMENT = CAMPAIGN_BASE + "/{segment}";
     public static final String GET_STATUS_TYPES = APPLICATION_BASE + "/statuses";
@@ -45,6 +46,7 @@ public class CampaignResourceConfig {
                 .GET(TOP_CAMPAIGNS, accept(MediaType.APPLICATION_JSON), handler::topCampaigns)
                 .GET(RECOMMENDED_CAMPAIGNS, accept(MediaType.APPLICATION_JSON), handler::recommendedCampaigns)
                 .GET(THUMBNAIL_PICTURE, accept(MediaType.APPLICATION_JSON), handler::getSignedThumbnailPicture)
+                .GET(TOTAL_BUDGET_CAMPAIGNS, accept(MediaType.APPLICATION_JSON), handler::getTotalBudget)
                 .POST(CAMPAIGN_BASE, accept(MediaType.APPLICATION_JSON)
                         .and(contentType(MediaType.APPLICATION_JSON)), handler::addCampaign)
                 .PUT(CREATE_SEGMENT, accept(MediaType.APPLICATION_JSON)

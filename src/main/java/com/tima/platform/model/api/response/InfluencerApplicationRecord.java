@@ -2,6 +2,8 @@ package com.tima.platform.model.api.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tima.platform.model.constant.ApplicationStatus;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -15,7 +17,10 @@ import java.time.LocalDate;
  */
 @Builder
 @JsonIgnoreProperties
-public record InfluencerApplicationRecord(String applicationId, String campaignPublicId, String campaignName,
+public record InfluencerApplicationRecord(String applicationId,
+                                          @NotBlank(message = "Empty Campaign Public Id")
+                                          String campaignPublicId,
+                                          String campaignName,
                                           BigDecimal campaignBudget, String campaignDescription, String username,
                                           String fullName, String email, String phoneNumber, String profilePicture,
 

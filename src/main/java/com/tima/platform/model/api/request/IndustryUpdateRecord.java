@@ -1,5 +1,6 @@
 package com.tima.platform.model.api.request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 /**
@@ -8,4 +9,7 @@ import lombok.Builder;
  * @Date: 12/12/23
  */
 @Builder
-public record IndustryUpdateRecord(String oldName, String newName, String description) {}
+public record IndustryUpdateRecord(
+        @NotNull(message = "Old Name is Required") String oldName,
+        @NotNull(message = "New Name is Required") String newName,
+        @NotNull(message = "Description is Required") String description) {}

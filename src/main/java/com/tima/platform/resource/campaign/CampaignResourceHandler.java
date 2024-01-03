@@ -2,6 +2,7 @@ package com.tima.platform.resource.campaign;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.tima.platform.config.AuthTokenConfig;
+import com.tima.platform.config.CustomValidator;
 import com.tima.platform.model.api.ApiResponse;
 import com.tima.platform.model.api.response.CampaignRegistrationRecord;
 import com.tima.platform.model.api.response.InfluencerApplicationRecord;
@@ -34,6 +35,7 @@ public class CampaignResourceHandler {
     private final CampaignRegistrationService registrationService;
     private final InfluencerApplicationService applicationService;
     private final CampaignAggregateService aggregateService;
+    private final CustomValidator validator;
 
     @Value("${aws.s3.resource.thumbnail}")
     private String thumbnailFolder;
@@ -67,23 +69,37 @@ public class CampaignResourceHandler {
     }
 
     public Mono<ServerResponse> addCampaign(ServerRequest request)  {
-        Mono<CampaignRegistrationRecord> recordMono = request.bodyToMono(CampaignRegistrationRecord.class);
-        log.info("Create Campaign (Full) Requested", request.remoteAddress().orElse(null));
-        return recordMono
-                .map(registrationService::addCampaignRegistration)
-                .flatMap(ApiResponse::buildServerResponse);
+        Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
+        Mono<CampaignRegistrationRecord> recordMono = request.bodyToMono(CampaignRegistrationRecord.class)
+                .doOnNext(validator::validateEntries)
+                .doOnNext(crRecord -> validator.validateEntries(crRecord.overview()))
+                .doOnNext(crRecord -> validator.validateEntries(crRecord.influencer()))
+                .doOnNext(crRecord -> validator.validateEntries(crRecord.creative()));
+        log.info("Create Campaign (Full) Requested  ", request.remoteAddress().orElse(null), " ", request.headers());
+        return jwtAuthToken
+                .map(ApiResponse::getPublicIdFromToken)
+                .flatMap(id -> recordMono
+                        .map(registration ->  registrationService.addCampaignRegistration(registration, id))
+                ).flatMap(ApiResponse::buildServerResponse);
     }
     public Mono<ServerResponse> addCampaignSegment(ServerRequest request)  {
         Mono<JsonNode> recordMono = request.bodyToMono(JsonNode.class);
+        Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
         String type = request.pathVariable("segment");
         log.info("Create Campaign (Part) Requested ", request.remoteAddress().orElse(null), " ", type);
-        return recordMono
-                .map(jsonNode -> registrationService.addCampaignRegistration(jsonNode, RegistrationType.valueOf(type)))
-                .flatMap(ApiResponse::buildServerResponse);
+        return jwtAuthToken
+                .map(ApiResponse::getPublicIdFromToken)
+                .flatMap(id -> recordMono
+                        .map(jsonNode -> registrationService.addCampaignRegistration(
+                                jsonNode, RegistrationType.valueOf(type), id) )
+                ).flatMap(ApiResponse::buildServerResponse);
     }
 
     public Mono<ServerResponse> editCampaign(ServerRequest request)  {
-        Mono<CampaignRegistrationRecord> recordMono = request.bodyToMono(CampaignRegistrationRecord.class);
+        Mono<CampaignRegistrationRecord> recordMono = request.bodyToMono(CampaignRegistrationRecord.class).doOnNext(validator::validateEntries)
+                .doOnNext(crRecord -> validator.validateEntries(crRecord.overview()))
+                .doOnNext(crRecord -> validator.validateEntries(crRecord.influencer()))
+                .doOnNext(crRecord -> validator.validateEntries(crRecord.creative()));
         log.info("Edit Campaign (Full) Requested", request.remoteAddress().orElse(null));
         return recordMono
                 .map(registrationService::updateCampaignRegistration)
@@ -111,6 +127,15 @@ public class CampaignResourceHandler {
         return jwtAuthToken
                 .map(ApiResponse::getPublicIdFromToken)
                 .map(aggregateService::getRecommendedRegistrations)
+                .flatMap(ApiResponse::buildServerResponse);
+    }
+
+    public Mono<ServerResponse> getTotalBudget(ServerRequest request)  {
+        Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
+        log.info("Get Total Budget Requested ", request.remoteAddress().orElse(null));
+        return jwtAuthToken
+                .map(ApiResponse::getPublicIdFromToken)
+                .map(aggregateService::getRegistrationBudgetByUserId)
                 .flatMap(ApiResponse::buildServerResponse);
     }
 
@@ -161,7 +186,8 @@ public class CampaignResourceHandler {
 
     public Mono<ServerResponse> addApplication(ServerRequest request)  {
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
-        Mono<InfluencerApplicationRecord> recordMono = request.bodyToMono(InfluencerApplicationRecord.class);
+        Mono<InfluencerApplicationRecord> recordMono = request.bodyToMono(InfluencerApplicationRecord.class)
+                .doOnNext(validator::validateEntries);
         log.info("Add New Application Requested", request.remoteAddress().orElse(null));
         return jwtAuthToken
                 .map(ApiResponse::getJwtRecord)

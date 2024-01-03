@@ -80,21 +80,26 @@ public class CampaignRegistrationService {
     }
 
     @PreAuthorize(ADMIN_BRAND)
-    public Mono<AppResponse> addCampaignRegistration(CampaignRegistrationRecord registrationRecord) {
-        log.info("Save full Campaign Registration Record ");
-        return registrationRepository.save(resolve(CampaignRegistrationConverter.mapToEntity(registrationRecord)) )
+    public Mono<AppResponse> addCampaignRegistration(CampaignRegistrationRecord registrationRecord, String publicId) {
+        log.info("Save full Campaign Registration Record ", registrationRecord);
+        CampaignRegistration newRegistration = resolve(CampaignRegistrationConverter.mapToEntity(registrationRecord));
+        newRegistration.setCreatedBy(publicId);
+        return registrationRepository.save( newRegistration )
                 .map(CampaignRegistrationConverter::mapToRecord)
                 .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG))
                 .onErrorResume(t -> handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
     }
 
     @PreAuthorize(ADMIN_BRAND)
-    public Mono<AppResponse> addCampaignRegistration(JsonNode jsonNode, RegistrationType type) {
+    public Mono<AppResponse> addCampaignRegistration(JsonNode jsonNode, RegistrationType type, String publicId) {
         log.info("Save Part Campaign Registration Record ", jsonNode);
         if(!RegistrationType.OVERVIEW.equals(type) && jsonNode.at("/publicId").asText().isBlank()) {
             return handleOnErrorResume(new AppException(INVALID_CAMPAIGN), BAD_REQUEST.value());
         }else if(RegistrationType.OVERVIEW.equals(type)) {
-            return registrationRepository.save(CampaignRegistrationConverter.mapToEntity(registerPart(jsonNode, type)))
+            CampaignRegistration newRegistration
+                    = CampaignRegistrationConverter.mapToEntity(registerPart(jsonNode, type));
+            newRegistration.setCreatedBy(publicId);
+            return registrationRepository.save(newRegistration)
                     .map(CampaignRegistrationConverter::mapToRecord)
                     .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG))
                     .onErrorResume(t -> handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));

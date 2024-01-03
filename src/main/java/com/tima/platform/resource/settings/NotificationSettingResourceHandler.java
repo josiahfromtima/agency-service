@@ -2,6 +2,7 @@ package com.tima.platform.resource.settings;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.tima.platform.config.AuthTokenConfig;
+import com.tima.platform.config.CustomValidator;
 import com.tima.platform.model.api.ApiResponse;
 import com.tima.platform.model.api.response.CampaignAudienceRecord;
 import com.tima.platform.model.api.response.CampaignCreativeRecord;
@@ -30,6 +31,7 @@ public class NotificationSettingResourceHandler {
     private final NotificationSettingService settingService;
     private final CampaignAudienceService audienceService;
     private final CampaignCreativeService creativeService;
+    private final CustomValidator validator;
 
     /**
      *  This section marks the notification setting activities
@@ -54,7 +56,8 @@ public class NotificationSettingResourceHandler {
     }
 
     public Mono<ServerResponse> updateCampaignAudiences(ServerRequest request)  {
-        Mono<CampaignAudienceRecord> recordMono = request.bodyToMono(CampaignAudienceRecord.class);
+        Mono<CampaignAudienceRecord> recordMono = request.bodyToMono(CampaignAudienceRecord.class)
+                .doOnNext(validator::validateEntries);
         log.info("Create or Edit Campaign Audience Requested", request.remoteAddress().orElse(null));
         return recordMono
                 .map(audienceService::addOrUpdateCampaignAudience)
@@ -77,7 +80,8 @@ public class NotificationSettingResourceHandler {
     }
 
     public Mono<ServerResponse> updateCampaignCreatives(ServerRequest request)  {
-        Mono<CampaignCreativeRecord> recordMono = request.bodyToMono(CampaignCreativeRecord.class);
+        Mono<CampaignCreativeRecord> recordMono = request.bodyToMono(CampaignCreativeRecord.class)
+                .doOnNext(validator::validateEntries);
         log.info("Create or Edit Campaign Creative Requested", request.remoteAddress().orElse(null));
         return recordMono
                 .map(creativeService::addOrUpdateCampaignCreative)

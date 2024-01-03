@@ -1,5 +1,6 @@
 package com.tima.platform.resource.industry;
 
+import com.tima.platform.config.CustomValidator;
 import com.tima.platform.model.api.ApiResponse;
 import com.tima.platform.model.api.request.IndustryUpdateRecord;
 import com.tima.platform.model.api.response.IndustryRecord;
@@ -27,6 +28,7 @@ public class IndustryResourceHandler {
 
     private final IndustryService industryService;
     private final InfluencerCategoryService categoryService;
+    private final CustomValidator validator;
 
     /**
      *  This section marks the industries activities
@@ -37,14 +39,15 @@ public class IndustryResourceHandler {
     }
 
     public Mono<ServerResponse> addNewIndustry(ServerRequest request)  {
-        Mono<IndustryRecord> recordMono = request.bodyToMono(IndustryRecord.class);
+        Mono<IndustryRecord> recordMono = request.bodyToMono(IndustryRecord.class).doOnNext(validator::validateEntries);
         log.info("Registered a new industry Requested", request.remoteAddress().orElse(null));
         return recordMono
                 .map(industryService::addIndustry)
                 .flatMap(ApiResponse::buildServerResponse);
     }
     public Mono<ServerResponse> updateIndustry(ServerRequest request)  {
-        Mono<IndustryUpdateRecord> recordMono = request.bodyToMono(IndustryUpdateRecord.class);
+        Mono<IndustryUpdateRecord> recordMono = request.bodyToMono(IndustryUpdateRecord.class)
+                .doOnNext(validator::validateEntries);
         log.info("Update Industry Requested", request.remoteAddress().orElse(null));
         return recordMono
                 .map(industryService::updateIndustry)
@@ -65,14 +68,16 @@ public class IndustryResourceHandler {
     }
 
     public Mono<ServerResponse> addNewInfluencerCategory(ServerRequest request)  {
-        Mono<InfluencerCategoryRecord> recordMono = request.bodyToMono(InfluencerCategoryRecord.class);
+        Mono<InfluencerCategoryRecord> recordMono = request.bodyToMono(InfluencerCategoryRecord.class)
+                .doOnNext(validator::validateEntries);
         log.info("Registered a new industry Requested", request.remoteAddress().orElse(null));
         return recordMono
                 .map(categoryService::addIndustry)
                 .flatMap(ApiResponse::buildServerResponse);
     }
     public Mono<ServerResponse> updateInfluencerCategory(ServerRequest request)  {
-        Mono<IndustryUpdateRecord> recordMono = request.bodyToMono(IndustryUpdateRecord.class);
+        Mono<IndustryUpdateRecord> recordMono = request.bodyToMono(IndustryUpdateRecord.class)
+                        .doOnNext(validator::validateEntries);
         log.info("Update Influencer Industry Requested", request.remoteAddress().orElse(null));
         return recordMono
                 .map(categoryService::updateInfluencerCategory)

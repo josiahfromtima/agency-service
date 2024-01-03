@@ -56,6 +56,7 @@ public class CampaignRegistration implements Serializable, Persistable<Integer> 
     private String publicId;
     private Short status;
     private Instant createdOn;
+    private String createdBy;
     private Instant editedOn;
 
     @Override
