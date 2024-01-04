@@ -1,5 +1,6 @@
 package com.tima.platform.model.api.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.tima.platform.model.api.request.CampaignCreativeRecord;
 import com.tima.platform.model.api.request.CampaignInfluencerRecord;
 import com.tima.platform.model.api.request.CampaignOverviewRecord;
@@ -13,6 +14,7 @@ import java.time.Instant;
  * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
  * @Date: 12/19/23
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
 public record CampaignRegistrationRecord(String publicId,
                                          @NotNull(message = "Overview Segment is Required")
@@ -21,4 +23,4 @@ public record CampaignRegistrationRecord(String publicId,
                                          CampaignInfluencerRecord influencer,
                                          @NotNull(message = "Creative Segment is Required")
                                          CampaignCreativeRecord creative,
-                                         Short status, Instant createdOn) {}
+                                         Short status, String createdBy, Instant createdOn) {}

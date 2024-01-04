@@ -19,7 +19,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 public class CampaignResourceConfig {
     public static final String API_V1_URL = "/v1";
     public static final String CAMPAIGN_BASE = API_V1_URL + "/campaigns";
-    public static final String THUMBNAIL_PICTURE = CAMPAIGN_BASE + "/signed/url/thumbnail/{keyName}";
+    public static final String THUMBNAIL_PICTURE = CAMPAIGN_BASE + "/signed/url/thumbnail/{keyName}/{extension}";
     public static final String APPLICATION_BASE = API_V1_URL + "/applications";
     public static final String GET_TYPES = CAMPAIGN_BASE + "/segment";
     public static final String SEARCH_CAMPAIGNS = CAMPAIGN_BASE + "/search/filter";

@@ -84,6 +84,8 @@ public class CampaignRegistrationConverter {
                         .thumbnail(entity.getThumbnail())
                         .visibility(entity.getVisibility())
                         .build())
+                .createdBy(entity.getCreatedBy())
+                .createdOn(entity.getCreatedOn())
                 .build();
     }
 

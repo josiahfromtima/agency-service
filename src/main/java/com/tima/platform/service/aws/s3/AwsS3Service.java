@@ -1,7 +1,6 @@
 package com.tima.platform.service.aws.s3;
 
 import com.tima.platform.model.api.AppResponse;
-import com.tima.platform.service.CampaignStatusUpdateService;
 import com.tima.platform.util.AppUtil;
 import com.tima.platform.util.LoggerHelper;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +14,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.Objects;
 
 /**
  * @Author: Josiah Adetayo
@@ -30,12 +30,10 @@ public class AwsS3Service {
     private String region;
     @Value("${aws.s3.image-ext}")
     private String defaultFileExtension;
-    @Value("${aws.s3.content-type}")
-    private String contentType;
     private static final String BUCKET_NAME = "tima-resources";
 
-    public Mono<AppResponse> getSignedUrl(String folder, String keyName) {
-        return Mono.just(AppUtil.buildAppResponse(createPreSignedUrl(folder, keyName), "Signed Url"));
+    public Mono<AppResponse> getSignedUrl(String folder, String keyName, String ext) {
+        return Mono.just(AppUtil.buildAppResponse(createPreSignedUrl(folder, keyName, ext), "Signed Url"));
     }
 
     /**
@@ -44,14 +42,14 @@ public class AwsS3Service {
      * @param keyName - The name of the object.
      * @return - The presigned URL for an HTTP PUT.
      */
-    private String createPreSignedUrl(String folderName, String keyName) {
+    private String createPreSignedUrl(String folderName, String keyName, String ext) {
         String message = BUCKET_NAME + " " + keyName+" "+folderName;
         log.info(message);
         try (S3Presigner preSigner = buildSigner()) {
             PutObjectRequest objectRequest = PutObjectRequest.builder()
                     .bucket(BUCKET_NAME)
-                    .key(folderName.concat(checkExt(keyName)))
-                    .contentType(contentType)
+                    .key(folderName.concat(checkExt(keyName, ext)))
+                    .contentType(fileCategory(ext)+extension(ext))
                     .metadata(new HashMap<>())
                     .build();
 
@@ -72,8 +70,17 @@ public class AwsS3Service {
         return S3Presigner.builder().region(Region.of(region)).build();
     }
 
-    private String checkExt(String file) {
-        if(file.contains(".jpeg") || file.contains(".jpg") || file.contains(".png")) return file;
-        else return file + defaultFileExtension;
+    private String checkExt(String file, String ext) {
+        return file + "." + extension(ext);
+    }
+
+    private String extension(String ext) {
+        return (Objects.isNull(ext) || ext.isEmpty()) ? defaultFileExtension : ext;
+    }
+
+    private String fileCategory(String type) {
+        if(Objects.isNull(type) || type.isEmpty()) return "image/";
+        if(type.matches("png|jpeg|jpg|gif|svg")) return "image/";
+        else return "application/";
     }
 }

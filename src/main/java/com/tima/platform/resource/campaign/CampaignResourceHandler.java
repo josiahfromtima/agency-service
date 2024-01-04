@@ -45,8 +45,9 @@ public class CampaignResourceHandler {
      */
     public Mono<ServerResponse> getSignedThumbnailPicture(ServerRequest request)  {
         String keyName = request.pathVariable("keyName");
+        String extension = request.pathVariable("extension");
         log.info("Get Signed Thumbnail Picture URL Requested ", request.remoteAddress().orElse(null));
-        return buildServerResponse(awsS3Service.getSignedUrl(thumbnailFolder, keyName));
+        return buildServerResponse(awsS3Service.getSignedUrl(thumbnailFolder, keyName, extension));
     }
 
     /**
