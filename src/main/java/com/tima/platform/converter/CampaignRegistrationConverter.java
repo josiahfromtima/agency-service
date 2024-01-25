@@ -23,6 +23,7 @@ public class CampaignRegistrationConverter {
         CampaignRegistrationRecord sanitized = validatePart(dto);
         return CampaignRegistration.builder()
                 .publicId(dto.publicId())
+                .brandName(dto.brandName())
                 .name(sanitized.overview().name())
                 .briefDescription(sanitized.overview().briefDescription())
                 .website(dto.overview().website())
@@ -53,6 +54,7 @@ public class CampaignRegistrationConverter {
     public static synchronized CampaignRegistrationRecord mapToRecord(CampaignRegistration entity) {
         return  CampaignRegistrationRecord.builder()
                 .publicId(entity.getPublicId())
+                .brandName(entity.getBrandName())
                 .status(entity.getStatus())
                 .overview(CampaignOverviewRecord.builder()
                         .name(entity.getName())

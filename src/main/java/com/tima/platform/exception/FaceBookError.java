@@ -7,16 +7,14 @@ import lombok.Data;
 /**
  * @Author: Josiah Adetayo
  * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
- * @Date: 12/6/23
+ * @Date: 1/25/24
  */
 @Data
-public class ClientError {
-    @JsonProperty("error_description")
-    @SerializedName("error_description")
-    private String errorDescription;
-    private String error;
+public class FaceBookError {
     private String message;
-    @JsonProperty("error_uri")
-    @SerializedName("error_uri")
-    private String errorUri;
+    private String type;
+    private Integer code;
+    @JsonProperty("fbtrace_id")
+    @SerializedName("fbtrace_id")
+    private String traceId;
 }

@@ -17,6 +17,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+
 /**
  * @Author: Josiah Adetayo
  * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
@@ -76,7 +78,8 @@ public class ApiErrorAdvice extends AbstractErrorWebExceptionHandler {
     }
 
     private String getAsString(String key, Map<String, Object> errors, String defaultValue) {
-        return String.valueOf(errors.getOrDefault(key, defaultValue));
+        return Objects.isNull(errors.get(key)) ? "Requested URL is invalid"
+                : String.valueOf(errors.getOrDefault(key, defaultValue));
     }
 
     private ApiException getException(String code, Map<String, Object> errors) {

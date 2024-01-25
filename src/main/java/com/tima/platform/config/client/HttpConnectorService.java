@@ -3,6 +3,8 @@ package com.tima.platform.config.client;
 import com.google.gson.Gson;
 import com.tima.platform.exception.AppException;
 import com.tima.platform.exception.ClientError;
+import com.tima.platform.exception.FaceBookError;
+import com.tima.platform.exception.FacebookBaseError;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -125,9 +127,23 @@ public class HttpConnectorService {
         return response.bodyToMono(String.class)
                 .flatMap( s -> {
                     log.error("{}", s);
-                    ClientError clientError = new Gson().fromJson(s, ClientError.class);
+                    ClientError clientError = handleClientAppError(s);
                     return handleOnErrorResume(new AppException(clientError.getErrorDescription()), BAD_REQUEST.value());
                 });
     }
 
+    private ClientError handleClientAppError(String message) {
+        if(message.contains("fb")) return faceBookError(message);
+        else return new Gson().fromJson(message, ClientError.class);
+    }
+
+    private ClientError faceBookError(String fbError) {
+        FacebookBaseError faceBookBaseError = new Gson().fromJson(fbError, FacebookBaseError.class);
+        FaceBookError faceBookError = faceBookBaseError.getError();
+        ClientError error = new ClientError();
+        error.setErrorDescription(faceBookError.getMessage());
+        error.setError(faceBookError.getType());
+        error.setErrorUri(faceBookError.getTraceId());
+        return error;
+    }
 }

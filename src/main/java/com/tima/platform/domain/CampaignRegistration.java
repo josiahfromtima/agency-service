@@ -29,6 +29,7 @@ public class CampaignRegistration implements Serializable, Persistable<Integer> 
 
     @Id
     private Integer id;
+    private String brandName;
     private String name;
     private String briefDescription;
     private String website;

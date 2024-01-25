@@ -44,6 +44,8 @@ public class ResourceServer {
             "/v1/settings/audience",
             "/v1/settings/creative",
             "/v1/campaigns/signed/url/thumbnail/**",
+            "/v1/meta/**",
+            "/v1/social-media/_public",
             // other public endpoints of your API may be appended to this array
     };
 }

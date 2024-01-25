@@ -15,8 +15,12 @@ import com.tima.platform.repository.CampaignRegistrationRepository;
 import com.tima.platform.util.AppUtil;
 import com.tima.platform.util.CampaignSearchSetting;
 import com.tima.platform.util.LoggerHelper;
+import com.tima.platform.util.ReportSettings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -63,9 +67,9 @@ public class CampaignRegistrationService {
         ));
     }
     @PreAuthorize(ADMIN_BRAND_INFLUENCER)
-    public Mono<AppResponse> getCampaignRegistrations() {
+    public Mono<AppResponse> getCampaignRegistrations(ReportSettings settings) {
         log.info("Getting ALl Campaign Registration Records...");
-        return registrationRepository.findAll()
+        return registrationRepository.findAllBy(setPage(settings))
                 .collectList()
                 .map(CampaignRegistrationConverter::mapToRecords)
                 .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG));
@@ -76,6 +80,14 @@ public class CampaignRegistrationService {
         log.info("Getting Campaign Registration Record for ", publicId);
         return getRegistration(publicId)
                 .map(CampaignRegistrationConverter::mapToRecord)
+                .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG));
+    }
+
+    @PreAuthorize(ADMIN_BRAND_INFLUENCER)
+    public Mono<AppResponse> getCampaignRegistrationByBrand(String brand, ReportSettings settings) {
+        log.info("Getting Campaign Registration Record for ", brand);
+        return getRegistrationByBrand(brand, settings)
+                .map(CampaignRegistrationConverter::mapToRecords)
                 .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG));
     }
 
@@ -154,6 +166,11 @@ public class CampaignRegistrationService {
 
     private Mono<CampaignRegistration> getRegistration(String publicId) {
         return registrationRepository.findByPublicId(publicId)
+                .switchIfEmpty(handleOnErrorResume(new AppException(INVALID_CAMPAIGN), BAD_REQUEST.value()));
+    }
+    private Mono<List<CampaignRegistration>> getRegistrationByBrand(String brandName, ReportSettings settings) {
+        return registrationRepository.findByBrandName(brandName, setPage(settings))
+                .collectList()
                 .switchIfEmpty(handleOnErrorResume(new AppException(INVALID_CAMPAIGN), BAD_REQUEST.value()));
     }
 
@@ -262,5 +279,10 @@ public class CampaignRegistrationService {
     private String checkExt(String file) {
         if(file.contains(".jpeg") || file.contains(".jpg") || file.contains(".png")) return file;
         else return file + defaultFileExtension;
+    }
+
+    private Pageable setPage(ReportSettings settings) {
+        return PageRequest.of(settings.getPage(), settings.getSize(),
+                Sort.Direction.fromString(settings.getSortIn()), settings.getSortBy());
     }
 }

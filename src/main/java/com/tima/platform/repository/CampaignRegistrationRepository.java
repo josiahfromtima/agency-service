@@ -1,6 +1,8 @@
 package com.tima.platform.repository;
 
 import com.tima.platform.domain.CampaignRegistration;
+import com.tima.platform.domain.InfluencerApplication;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
@@ -20,8 +22,11 @@ import static com.tima.platform.repository.projection.NativeSql.RECOMMENDED_CAMP
 public interface CampaignRegistrationRepository extends ReactiveCrudRepository<CampaignRegistration, Integer> {
     Mono<CampaignRegistration> findByPublicId(String publicId);
 
+    Flux<CampaignRegistration> findAllBy(Pageable pageable);
+
     Flux<CampaignRegistration> findByEndDateAfterOrEndDate(LocalDate today, LocalDate thisDay);
     Flux<CampaignRegistration> findByIdIn(List<Integer> ids);
+    Flux<CampaignRegistration> findByBrandName(String name, Pageable pageable);
 
     Flux<CampaignRegistration> findByCreatedBy(String publicId);
     @Query(RECOMMENDED_CAMPAIGN_STATEMENT)

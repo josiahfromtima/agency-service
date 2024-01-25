@@ -60,13 +60,20 @@ public class CampaignResourceHandler {
 
     public Mono<ServerResponse> getRegistrations(ServerRequest request)  {
         log.info("Get Registered Campaigns Requested", request.remoteAddress().orElse(null));
-        return buildServerResponse(registrationService.getCampaignRegistrations());
+        return buildServerResponse(registrationService.getCampaignRegistrations(reportSettings(request)));
     }
 
     public Mono<ServerResponse> getRegistration(ServerRequest request)  {
         String publicId = request.pathVariable("publicId");
         log.info("Get Registered Campaign Requested", request.remoteAddress().orElse(null));
         return buildServerResponse(registrationService.getCampaignRegistration(publicId));
+    }
+
+    public Mono<ServerResponse> getRegistrationByBrand(ServerRequest request)  {
+        String brandName = request.pathVariable("brand");
+        log.info("Get Registered Campaign By Brand Requested", request.remoteAddress().orElse(null));
+        return buildServerResponse(
+                registrationService.getCampaignRegistrationByBrand(brandName, reportSettings(request)));
     }
 
     public Mono<ServerResponse> addCampaign(ServerRequest request)  {
