@@ -25,12 +25,14 @@ public class ClientIndustryResourceHandler {
 
     private final ClientIndustryService industryService;
 
+    private static final String X_FORWARD_FOR = "X-Forwarded-For";
+
     /**
      *  This section marks the industries activities
      */
     public Mono<ServerResponse> getClientIndustries(ServerRequest request)  {
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
-        log.info("Get Client Industries Requested", request.remoteAddress().orElse(null));
+        log.info("Get Client Industries Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
                 .map(ApiResponse::getPublicIdFromToken)
                 .map(industryService::getIndustries)
@@ -40,7 +42,7 @@ public class ClientIndustryResourceHandler {
     public Mono<ServerResponse> updateIndustry(ServerRequest request)  {
         Mono<JsonNode> recordMono = request.bodyToMono(JsonNode.class);
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
-        log.info("Update Client industry Requested", request.remoteAddress().orElse(null));
+        log.info("Update Client industry Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
                 .map(ApiResponse::getPublicIdFromToken)
                 .flatMap(publicId -> recordMono.map(jsonNode ->
@@ -49,7 +51,7 @@ public class ClientIndustryResourceHandler {
     }
     public Mono<ServerResponse> deleteIndustry(ServerRequest request)  {
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
-        log.info("Delete Industry Requested", request.remoteAddress().orElse(null));
+        log.info("Delete Industry Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
                 .map(ApiResponse::getPublicIdFromToken)
                 .map(industryService::deleteClientIndustry)

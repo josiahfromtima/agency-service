@@ -46,6 +46,7 @@ public class ResourceServer {
             "/v1/campaigns/signed/url/thumbnail/**",
             "/v1/meta/**",
             "/v1/social-media/_public",
+            "/v1/social-media/linked/user/**",
             // other public endpoints of your API may be appended to this array
     };
 }

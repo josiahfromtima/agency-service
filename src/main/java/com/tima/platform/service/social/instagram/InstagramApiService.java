@@ -42,6 +42,8 @@ public class InstagramApiService {
     private String longLiveTokenEndpoint;
     @Value("${social.ig.businessDiscovery}")
     private String businessDiscoveryEndpoint;
+    @Value("${social.ig.businessAccount}")
+    private String businessAccount;
 
 
     private static final String COMMENTS = "comments";
@@ -59,13 +61,12 @@ public class InstagramApiService {
                 .doOnNext(log::info)
                 .map(graphApi -> buildAppResponse(graphApi, "Graph Api"));
     }
-    public Mono<AppResponse> getBusinessDiscovery(String token, String igBusinessId, String handle) {
+    public Mono<BasicBusinessInsight> getBusinessDiscovery(String token, String handle) {
         log.info("Getting the Instagram Business Info ");
-        return connectorService.get(template(businessDiscoveryEndpoint, igBusinessId, handle),
+        return connectorService.get(template(businessDiscoveryEndpoint, businessAccount, handle),
                         headers(token), BusinessSummary.class)
                 .doOnNext(log::info)
-                .flatMap(this::calculateMedia)
-                .map(graphApi -> buildAppResponse(graphApi, "Graph Api"));
+                .flatMap(this::calculateMedia);
     }
     public Mono<LongLivedAccessToken> getLTTLAccessToken(String token) {
         log.info("Getting the Long Lived Access Token");

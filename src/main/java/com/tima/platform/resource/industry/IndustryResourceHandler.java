@@ -30,17 +30,18 @@ public class IndustryResourceHandler {
     private final InfluencerCategoryService categoryService;
     private final CustomValidator validator;
 
+    private static final String X_FORWARD_FOR = "X-Forwarded-For";
     /**
      *  This section marks the industries activities
      */
     public Mono<ServerResponse> getIndustries(ServerRequest request)  {
-        log.info("Get Registered Industries Requested", request.remoteAddress().orElse(null));
+        log.info("Get Registered Industries Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return buildServerResponse(industryService.getIndustries());
     }
 
     public Mono<ServerResponse> addNewIndustry(ServerRequest request)  {
         Mono<IndustryRecord> recordMono = request.bodyToMono(IndustryRecord.class).doOnNext(validator::validateEntries);
-        log.info("Registered a new industry Requested", request.remoteAddress().orElse(null));
+        log.info("Registered a new industry Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return recordMono
                 .map(industryService::addIndustry)
                 .flatMap(ApiResponse::buildServerResponse);
@@ -48,14 +49,14 @@ public class IndustryResourceHandler {
     public Mono<ServerResponse> updateIndustry(ServerRequest request)  {
         Mono<IndustryUpdateRecord> recordMono = request.bodyToMono(IndustryUpdateRecord.class)
                 .doOnNext(validator::validateEntries);
-        log.info("Update Industry Requested", request.remoteAddress().orElse(null));
+        log.info("Update Industry Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return recordMono
                 .map(industryService::updateIndustry)
                 .flatMap(ApiResponse::buildServerResponse);
     }
     public Mono<ServerResponse> deleteIndustry(ServerRequest request)  {
         String name = request.pathVariable("name");
-        log.info("Delete Industry Requested", request.remoteAddress().orElse(null));
+        log.info("Delete Industry Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return buildServerResponse(industryService.deleteIndustry(name));
     }
 
@@ -63,14 +64,14 @@ public class IndustryResourceHandler {
      *  This section marks the influencer categories activities
      */
     public Mono<ServerResponse> getInfluencerCategories(ServerRequest request)  {
-        log.info("Get Registered Influeencer Industries Requested", request.remoteAddress().orElse(null));
+        log.info("Get Registered Influeencer Industries Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return buildServerResponse(categoryService.getIndustries());
     }
 
     public Mono<ServerResponse> addNewInfluencerCategory(ServerRequest request)  {
         Mono<InfluencerCategoryRecord> recordMono = request.bodyToMono(InfluencerCategoryRecord.class)
                 .doOnNext(validator::validateEntries);
-        log.info("Registered a new industry Requested", request.remoteAddress().orElse(null));
+        log.info("Registered a new industry Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return recordMono
                 .map(categoryService::addIndustry)
                 .flatMap(ApiResponse::buildServerResponse);
@@ -78,14 +79,14 @@ public class IndustryResourceHandler {
     public Mono<ServerResponse> updateInfluencerCategory(ServerRequest request)  {
         Mono<IndustryUpdateRecord> recordMono = request.bodyToMono(IndustryUpdateRecord.class)
                         .doOnNext(validator::validateEntries);
-        log.info("Update Influencer Industry Requested", request.remoteAddress().orElse(null));
+        log.info("Update Influencer Industry Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return recordMono
                 .map(categoryService::updateInfluencerCategory)
                 .flatMap(ApiResponse::buildServerResponse);
     }
     public Mono<ServerResponse> deleteInfluencerCategory(ServerRequest request)  {
         String name = request.pathVariable("name");
-        log.info("Delete Influencer Industry Requested", request.remoteAddress().orElse(null));
+        log.info("Delete Influencer Industry Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return buildServerResponse(categoryService.deleteIndustry(name));
     }
 

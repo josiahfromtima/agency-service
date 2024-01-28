@@ -32,12 +32,14 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 @Service
 @RequiredArgsConstructor
 public class SocialMediaService {
-    private final LoggerHelper log = LoggerHelper.newInstance(IndustryService.class.getName());
+    private final LoggerHelper log = LoggerHelper.newInstance(SocialMediaService.class.getName());
     private final SocialMediaRepository mediaRepository;
     private final InstagramApiService instagramApiService;
 
     @Value("${social.expires}")
     private long timeToLive;
+    @Value("${social.logoPath}")
+    private String awsLogoPathUrl;
     private static final long MINUS_DAYS = 5;
 
     private static final String SOCIAL_MSG = "Social Media request executed successfully";
@@ -67,6 +69,7 @@ public class SocialMediaService {
                     SocialMedia socialMedia = SocialMediaConverter.mapToEntity(socialMediaRecord);
                     socialMedia.setAccessToken(longLivedAccessToken.accessToken());
                     socialMedia.setExpiresIn((int) timeToLive);
+                    socialMedia.setLogo(awsLogoPathUrl + "/" + socialMedia.getLogo());
                     socialMedia.setExpiresOn(Instant.now().plus(timeToLive - MINUS_DAYS, ChronoUnit.DAYS));
                     return mediaRepository.save(socialMedia);
                 })
@@ -101,7 +104,7 @@ public class SocialMediaService {
                 .then(Mono.fromCallable(() -> buildAppResponse(name + " Deleted", SOCIAL_MSG)));
     }
 
-    private Mono<SocialMedia> getSocialMedia(String name) {
+    public Mono<SocialMedia> getSocialMedia(String name) {
         return mediaRepository.findByName(name)
                 .switchIfEmpty(handleOnErrorResume(new AppException(INVALID_SOCIAL), BAD_REQUEST.value()));
     }

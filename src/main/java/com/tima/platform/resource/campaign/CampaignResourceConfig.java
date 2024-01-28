@@ -32,6 +32,7 @@ public class CampaignResourceConfig {
     public static final String GET_STATUS_TYPES = APPLICATION_BASE + "/statuses";
     public static final String GET_APPLICATION = APPLICATION_BASE + "/{applicationId}";
     public static final String GET_APPLICATION_BY_STATUS = APPLICATION_BASE + "/status/{status}";
+    public static final String GET_APPLICATION_BY_STATUS_CAMPAIGN = APPLICATION_BASE + "/search/filter";
     public static final String GET_APPLICATION_BY_CAMPAIGN = APPLICATION_BASE + "/campaign/{campaignId}";
     public static final String GET_APPLICATION_BY_APPLICANT = APPLICATION_BASE + "/applicant/{applicantId}";
     public static final String GET_APPLICATION_BY_DATE = APPLICATION_BASE + "/date/{startDate}/{endDate}";
@@ -60,6 +61,8 @@ public class CampaignResourceConfig {
                 .GET(APPLICATION_BASE, accept(MediaType.APPLICATION_JSON), handler::getApplications)
                 .GET(GET_APPLICATION, accept(MediaType.APPLICATION_JSON), handler::getApplication)
                 .GET(GET_APPLICATION_BY_STATUS, accept(MediaType.APPLICATION_JSON), handler::getApplicationByStatus)
+                .GET(GET_APPLICATION_BY_STATUS_CAMPAIGN, accept(MediaType.APPLICATION_JSON),
+                        handler::getApplicationByStatusAndCampaign)
                 .GET(GET_APPLICATION_BY_CAMPAIGN, accept(MediaType.APPLICATION_JSON),
                         handler::getApplicationByCampaignId)
                 .GET(GET_APPLICATION_BY_APPLICANT, accept(MediaType.APPLICATION_JSON),

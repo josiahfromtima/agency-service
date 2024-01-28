@@ -28,7 +28,7 @@ public class ClientSocialMediaConverter {
     public static synchronized ClientSocialMediaRecord mapToRecord(ClientSocialMedia entity) {
         return  ClientSocialMediaRecord.builder()
                 .userId(entity.getUserId())
-                .selectedSocialMedia(json(entity.getSelectedSocialMedia(), ClientSelectedSocialMedia.class))
+                .selectedSocialMedia(json(entity.getSelectedSocialMedia()))
                 .url(entity.getUrl())
                 .build();
     }
@@ -54,7 +54,11 @@ public class ClientSocialMediaConverter {
         return (T) value;
     }
 
-    private static <T> List<T> json(String value, Class<T> clazz) {
-        return AppUtil.gsonInstance().fromJson(value, new TypeToken<List<T>>(){}.getType());
+    private static <T> List<T> json(String value) {
+        return AppUtil.gsonInstance().fromJson(value, new TypeToken<List<ClientSelectedSocialMedia>>(){}.getType());
+    }
+
+    public  static String json(Object data) {
+        return AppUtil.gsonInstance().toJson(data);
     }
 }

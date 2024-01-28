@@ -33,13 +33,15 @@ public class NotificationSettingResourceHandler {
     private final CampaignCreativeService creativeService;
     private final CustomValidator validator;
 
+    private static final String X_FORWARD_FOR = "X-Forwarded-For";
+
     /**
      *  This section marks the notification setting activities
      */
     public Mono<ServerResponse> updateSettings(ServerRequest request)  {
         Mono<JsonNode> recordMono = request.bodyToMono(JsonNode.class);
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
-        log.info("Update Notification Settings Requested", request.remoteAddress().orElse(null));
+        log.info("Update Notification Settings Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
                 .map(ApiResponse::getPublicIdFromToken)
                 .map(publicId ->  recordMono.flatMap(restRecord ->
@@ -51,14 +53,14 @@ public class NotificationSettingResourceHandler {
      *  This section marks the campaign audience setting activities
      */
     public Mono<ServerResponse> getCampaignAudiences(ServerRequest request)  {
-        log.info("Get Available Campaign Audience Requested", request.remoteAddress().orElse(null));
+        log.info("Get Available Campaign Audience Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return buildServerResponse(audienceService.getCampaignAudiences());
     }
 
     public Mono<ServerResponse> updateCampaignAudiences(ServerRequest request)  {
         Mono<CampaignAudienceRecord> recordMono = request.bodyToMono(CampaignAudienceRecord.class)
                 .doOnNext(validator::validateEntries);
-        log.info("Create or Edit Campaign Audience Requested", request.remoteAddress().orElse(null));
+        log.info("Create or Edit Campaign Audience Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return recordMono
                 .map(audienceService::addOrUpdateCampaignAudience)
                 .flatMap(ApiResponse::buildServerResponse);
@@ -66,7 +68,7 @@ public class NotificationSettingResourceHandler {
 
     public Mono<ServerResponse> deleteCampaignAudiences(ServerRequest request)  {
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
-        log.info("Delete Campaign Audience Requested", request.remoteAddress().orElse(null));
+        log.info("Delete Campaign Audience Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
                 .map(ApiResponse::getPublicIdFromToken)
                 .map(audienceService::deleteCampaignAudience)
@@ -75,14 +77,14 @@ public class NotificationSettingResourceHandler {
      *  This section marks the campaign creative setting activities
      */
     public Mono<ServerResponse> getCampaignCreatives(ServerRequest request)  {
-        log.info("Get Available Campaign Creative Requested", request.remoteAddress().orElse(null));
+        log.info("Get Available Campaign Creative Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return buildServerResponse(creativeService.getCampaignCreatives());
     }
 
     public Mono<ServerResponse> updateCampaignCreatives(ServerRequest request)  {
         Mono<CampaignCreativeRecord> recordMono = request.bodyToMono(CampaignCreativeRecord.class)
                 .doOnNext(validator::validateEntries);
-        log.info("Create or Edit Campaign Creative Requested", request.remoteAddress().orElse(null));
+        log.info("Create or Edit Campaign Creative Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return recordMono
                 .map(creativeService::addOrUpdateCampaignCreative)
                 .flatMap(ApiResponse::buildServerResponse);
@@ -90,7 +92,7 @@ public class NotificationSettingResourceHandler {
 
     public Mono<ServerResponse> deleteCampaignCreatives(ServerRequest request)  {
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
-        log.info("Delete Campaign Creative Requested", request.remoteAddress().orElse(null));
+        log.info("Delete Campaign Creative Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
                 .map(ApiResponse::getPublicIdFromToken)
                 .map(creativeService::deleteCampaignCreative)

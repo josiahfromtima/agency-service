@@ -84,6 +84,19 @@ public class InfluencerApplicationService {
     }
 
     @PreAuthorize(ADMIN_BRAND_INFLUENCER)
+    public Mono<AppResponse> getApplicationsByStatusAndCampaign(String appStatus,
+                                                                String campaignId,
+                                                                ReportSettings settings) {
+        log.info(String.format("Getting Influencer Application Records by %s and %s", appStatus, campaignId));
+        ApplicationStatus status = parseStatus(appStatus);
+        if(Objects.isNull(status)) return handleOnErrorResume(new AppException(INVALID_STATUS), BAD_REQUEST.value());
+        return applicationRepository.findByStatusAndCampaignPublicId(status, campaignId, setPage(settings))
+                .collectList()
+                .map(InfluencerApplicationConverter::mapToRecords)
+                .map(applicationRecords -> AppUtil.buildAppResponse(applicationRecords, APPLICATION_MSG));
+    }
+
+    @PreAuthorize(ADMIN_BRAND_INFLUENCER)
     public Mono<AppResponse> getApplicationsByCampaignId(String publicId, ReportSettings settings) {
         log.info("Getting Influencer Application Records by campaign ", publicId);
         return getCampaign(publicId)
