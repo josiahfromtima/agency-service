@@ -70,8 +70,7 @@ public class CampaignResourceConfig {
                 .GET(GET_APPLICATION_BY_DATE, accept(MediaType.APPLICATION_JSON), handler::getApplicationByDateRange)
                 .POST(APPLICATION_BASE, accept(MediaType.APPLICATION_JSON)
                         .and(contentType(MediaType.APPLICATION_JSON)), handler::addApplication)
-                .PUT(REVIEW_APPLICATION, accept(MediaType.APPLICATION_JSON)
-                        .and(contentType(MediaType.APPLICATION_JSON)), handler::reviewApplication)
+                .PUT(REVIEW_APPLICATION, accept(MediaType.APPLICATION_JSON), handler::reviewApplication)
                 .DELETE(GET_APPLICATION, accept(MediaType.APPLICATION_JSON), handler::deleteApplication)
                 .build();
     }

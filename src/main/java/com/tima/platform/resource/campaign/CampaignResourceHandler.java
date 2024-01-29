@@ -216,13 +216,12 @@ public class CampaignResourceHandler {
 
     public Mono<ServerResponse> reviewApplication(ServerRequest request)  {
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
-        Mono<InfluencerApplicationRecord> recordMono = request.bodyToMono(InfluencerApplicationRecord.class);
+        String appId = request.queryParam("applicationId").orElse("");
         String reviewStatus = request.pathVariable("reviewStatus");
         log.info("Review Application Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
                 .map(ApiResponse::getPublicIdFromToken)
-                .flatMap(publicId -> recordMono.map(applicationRecord ->
-                        applicationService.reviewApplication (applicationRecord, publicId, reviewStatus)))
+                .map(publicId -> applicationService.reviewApplication (appId, publicId, reviewStatus))
                 .flatMap(ApiResponse::buildServerResponse);
     }
 

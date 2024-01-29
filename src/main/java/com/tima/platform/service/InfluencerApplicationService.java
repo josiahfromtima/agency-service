@@ -22,6 +22,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -157,21 +158,19 @@ public class InfluencerApplicationService {
     }
 
     @PreAuthorize(ADMIN_BRAND)
-    public Mono<AppResponse> reviewApplication(InfluencerApplicationRecord appRecord,
+    public Mono<AppResponse> reviewApplication(String appId,
                                                String publicId,
                                                String reviewStatus) {
         log.info("Updating Reviewed Application Record ", reviewStatus);
         ApplicationStatus status = parseStatus(reviewStatus);
         if(Objects.isNull(status)) return handleOnErrorResume(new AppException(INVALID_STATUS), BAD_REQUEST.value());
-        return getApplicationById(appRecord.applicationId())
+        return getApplicationById(appId)
                 .flatMap(application -> {
-                    InfluencerApplication modified = InfluencerApplicationConverter.mapToEntity(appRecord);
-                    modified.setId(application.getId());
-                    modified.setStatus(status);
-                    modified.setReviewedBy(publicId);
-                    modified.setCreatedOn(application.getCreatedOn());
-                    if(ApplicationStatus.APPROVED == status)  modified.setApprovedBy(publicId);
-                    return applicationRepository.save(modified);
+                    application.setStatus(status);
+                    application.setReviewedBy(publicId);
+                    application.setEditedOn(Instant.now());
+                    if(ApplicationStatus.APPROVED == status)  application.setApprovedBy(publicId);
+                    return applicationRepository.save(application);
                 })
                 .map(InfluencerApplicationConverter::mapToRecord)
                 .map(applicationRecord -> AppUtil.buildAppResponse(applicationRecord, APPLICATION_MSG))
