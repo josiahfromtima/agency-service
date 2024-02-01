@@ -52,6 +52,7 @@ public class InfluencerApplicationConverter {
                 .status(entity.getStatus())
                 .submittedBy(entity.getSubmittedBy())
                 .reviewedBy(entity.getReviewedBy())
+                .campaignLogo(entity.getCampaignLogo())
                 .createdOn(entity.getCreatedOn())
                 .editedOn(entity.getEditedOn())
                 .build();

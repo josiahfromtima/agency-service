@@ -12,10 +12,7 @@ import com.tima.platform.model.api.request.CampaignOverviewRecord;
 import com.tima.platform.model.api.response.CampaignRegistrationRecord;
 import com.tima.platform.model.constant.RegistrationType;
 import com.tima.platform.repository.CampaignRegistrationRepository;
-import com.tima.platform.util.AppUtil;
-import com.tima.platform.util.CampaignSearchSetting;
-import com.tima.platform.util.LoggerHelper;
-import com.tima.platform.util.ReportSettings;
+import com.tima.platform.util.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import static com.tima.platform.exception.ApiErrorHandler.handleOnErrorResume;
 import static com.tima.platform.model.security.TimaAuthority.ADMIN_BRAND;
@@ -85,8 +83,30 @@ public class CampaignRegistrationService {
 
     @PreAuthorize(ADMIN_BRAND_INFLUENCER)
     public Mono<AppResponse> getCampaignRegistrationByBrand(String brand, ReportSettings settings) {
-        log.info("Getting Campaign Registration Record for ", brand);
+        log.info("Getting Campaign Registration Record by brand ", brand);
         return getRegistrationByBrand(brand, settings)
+                .map(CampaignRegistrationConverter::mapToRecords)
+                .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG));
+    }
+
+    public Mono<AppResponse> getCampaigns(short status, String brandName, ReportSettings settings) {
+        log.info("Getting Campaigns  Record ");
+        return (Objects.isNull(brandName)) ? getCampaignRegistrationByStatus(status, settings) :
+                getCampaignRegistrationByBrandAndStatus(brandName, status, settings);
+    }
+
+    @PreAuthorize(ADMIN_BRAND_INFLUENCER)
+    public Mono<AppResponse> getCampaignRegistrationByStatus(short status, ReportSettings settings) {
+        log.info("Getting Campaign Registration Record for ", status);
+        return getRegistrationByStatusAndBrand(status, null, settings)
+                .map(CampaignRegistrationConverter::mapToRecords)
+                .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG));
+    }
+
+    @PreAuthorize(ADMIN_BRAND_INFLUENCER)
+    public Mono<AppResponse> getCampaignRegistrationByBrandAndStatus(String brand, short status, ReportSettings settings) {
+        log.info("Getting Campaign Registration Record for brand ", brand, " and ", status);
+        return getRegistrationByStatusAndBrand(status, brand, settings)
                 .map(CampaignRegistrationConverter::mapToRecords)
                 .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG));
     }
@@ -99,7 +119,8 @@ public class CampaignRegistrationService {
         return registrationRepository.save( newRegistration )
                 .map(CampaignRegistrationConverter::mapToRecord)
                 .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG))
-                .onErrorResume(t -> handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
+                .onErrorResume(t ->
+                        handleOnErrorResume(new AppException(AppError.message(t.getMessage())), BAD_REQUEST.value()));
     }
 
     @PreAuthorize(ADMIN_BRAND)
@@ -114,7 +135,8 @@ public class CampaignRegistrationService {
             return registrationRepository.save(newRegistration)
                     .map(CampaignRegistrationConverter::mapToRecord)
                     .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG))
-                    .onErrorResume(t -> handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
+                    .onErrorResume(t ->
+                            handleOnErrorResume(new AppException(AppError.message(t.getMessage())), BAD_REQUEST.value()));
         }else {
             return getRegistration(jsonNode.at("/publicId").asText())
                     .flatMap(campaignRegistration -> {
@@ -144,7 +166,8 @@ public class CampaignRegistrationService {
                     return registrationRepository.save(modified);
                 }).map(CampaignRegistrationConverter::mapToRecord)
                 .map(campaignRecords -> AppUtil.buildAppResponse(campaignRecords, CAMPAIGN_MSG))
-                .onErrorResume(t -> handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
+                .onErrorResume(t ->
+                        handleOnErrorResume(new AppException(AppError.message(t.getMessage())), BAD_REQUEST.value()));
     }
 
     @PreAuthorize(ADMIN_BRAND)
@@ -172,6 +195,17 @@ public class CampaignRegistrationService {
         return registrationRepository.findByBrandName(brandName, setPage(settings))
                 .collectList()
                 .switchIfEmpty(handleOnErrorResume(new AppException(INVALID_CAMPAIGN), BAD_REQUEST.value()));
+    }
+    private Mono<List<CampaignRegistration>> getRegistrationByStatusAndBrand(short status,
+                                                                             String brandName,
+                                                                             ReportSettings settings) {
+        return (Objects.isNull(brandName)) ?
+                registrationRepository.findByStatusLessThanEqual(status, setPage(settings))
+                .collectList()
+                .switchIfEmpty(handleOnErrorResume(new AppException(INVALID_CAMPAIGN), BAD_REQUEST.value())) :
+                registrationRepository.findByBrandNameAndStatusLessThanEqual(brandName, status, setPage(settings))
+                        .collectList()
+                        .switchIfEmpty(handleOnErrorResume(new AppException(INVALID_CAMPAIGN), BAD_REQUEST.value()));
     }
 
     private Flux<CampaignRegistration> getRegistrationSearch(CampaignSearchSetting setting) {

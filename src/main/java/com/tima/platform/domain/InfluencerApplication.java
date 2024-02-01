@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -53,6 +54,8 @@ public class InfluencerApplication implements Serializable, Persistable<Integer>
     private String reviewedBy;
     private Instant createdOn;
     private Instant editedOn;
+    @Transient
+    private String campaignLogo;
 
     @Override
     public boolean isNew() {

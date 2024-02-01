@@ -21,6 +21,7 @@ public interface InfluencerApplicationRepository extends ReactiveCrudRepository<
     Flux<InfluencerApplication> findAllBy(Pageable pageable);
     Flux<InfluencerApplication> findByStatus(ApplicationStatus status, Pageable pageable);
     Flux<InfluencerApplication> findByStatusAndCampaignPublicId(ApplicationStatus status, String id, Pageable pageable);
+    Flux<InfluencerApplication> findByStatusAndCampaignPublicId(ApplicationStatus status, String id);
     Flux<InfluencerApplication> findByCampaignId(Integer id, Pageable pageable);
     Flux<InfluencerApplication> findBySubmittedBy(String publicId, Pageable pageable);
     Flux<InfluencerApplication> findByApplicationDateBetween(LocalDate startDate, LocalDate endDate, Pageable pageable);

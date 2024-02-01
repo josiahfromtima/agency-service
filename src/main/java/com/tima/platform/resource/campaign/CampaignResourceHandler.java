@@ -78,6 +78,14 @@ public class CampaignResourceHandler {
                 registrationService.getCampaignRegistrationByBrand(brandName, reportSettings(request)));
     }
 
+    public Mono<ServerResponse> getRegistrationByStatus(ServerRequest request)  {
+        String brandName = request.queryParam("brand").orElse(null);
+        short status = Short.parseShort(request.queryParam("status").orElse("0"));
+        log.info("Get Campaigns By Stats and/orBrand Requested", request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(
+                registrationService.getCampaigns(status, brandName, reportSettings(request)));
+    }
+
     public Mono<ServerResponse> addCampaign(ServerRequest request)  {
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
         Mono<CampaignRegistrationRecord> recordMono = request.bodyToMono(CampaignRegistrationRecord.class)

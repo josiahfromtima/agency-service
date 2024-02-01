@@ -3,14 +3,18 @@ package com.tima.platform.service;
 import com.tima.platform.converter.InfluencerApplicationConverter;
 import com.tima.platform.domain.CampaignRegistration;
 import com.tima.platform.domain.InfluencerApplication;
+import com.tima.platform.event.AlertEvent;
 import com.tima.platform.exception.AppException;
 import com.tima.platform.model.api.AppResponse;
+import com.tima.platform.model.api.request.AlertRecord;
 import com.tima.platform.model.api.request.UserCampaignRecord;
 import com.tima.platform.model.api.response.InfluencerApplicationRecord;
+import com.tima.platform.model.constant.AlertType;
 import com.tima.platform.model.constant.ApplicationStatus;
 import com.tima.platform.repository.CampaignRegistrationRepository;
 import com.tima.platform.repository.InfluencerApplicationRepository;
 import com.tima.platform.service.helper.UserProfileService;
+import com.tima.platform.util.AppError;
 import com.tima.platform.util.AppUtil;
 import com.tima.platform.util.LoggerHelper;
 import com.tima.platform.util.ReportSettings;
@@ -42,13 +46,13 @@ public class InfluencerApplicationService {
     private final InfluencerApplicationRepository applicationRepository;
     private final CampaignRegistrationRepository registrationRepository;
     private final UserProfileService userProfileService;
+    private final AlertEvent alertEvent;
 
     private static final String APPLICATION_MSG = "Application request executed successfully";
     private static final String INVALID_APPLICATION = "The application id is invalid";
     private static final String INVALID_CAMPAIGN = "The campaign selected is invalid";
     private static final String INVALID_DATE = "Invalid Date format. Accepted format is YYYY-MM-DD";
     private static final String INVALID_STATUS = "Invalid Application status provided";
-    private static final String ERROR_MSG = "The application record mutation could not be performed";
 
     @PreAuthorize(ADMIN_BRAND_INFLUENCER)
     public Mono<AppResponse> getApplicationStatuses() {
@@ -60,6 +64,7 @@ public class InfluencerApplicationService {
     public Mono<AppResponse> getApplications(ReportSettings settings) {
         log.info("Getting ALl Influencer Application Records...");
         return applicationRepository.findAllBy(setPage(settings))
+                .flatMap(this::addBanner)
                 .collectList()
                 .map(InfluencerApplicationConverter::mapToRecords)
                 .map(applicationRecords -> AppUtil.buildAppResponse(applicationRecords, APPLICATION_MSG));
@@ -69,6 +74,7 @@ public class InfluencerApplicationService {
     public Mono<AppResponse> getApplication(String applicationId) {
         log.info("Getting Influencer Application Record by ", applicationId);
         return getApplicationById(applicationId)
+                .flatMap(this::addBanner)
                 .map(InfluencerApplicationConverter::mapToRecord)
                 .map(applicationRecord -> AppUtil.buildAppResponse(applicationRecord, APPLICATION_MSG));
     }
@@ -79,6 +85,7 @@ public class InfluencerApplicationService {
         ApplicationStatus status = parseStatus(appStatus);
         if(Objects.isNull(status)) return handleOnErrorResume(new AppException(INVALID_STATUS), BAD_REQUEST.value());
         return applicationRepository.findByStatus(status, setPage(settings))
+                .flatMap(this::addBanner)
                 .collectList()
                 .map(InfluencerApplicationConverter::mapToRecords)
                 .map(applicationRecords -> AppUtil.buildAppResponse(applicationRecords, APPLICATION_MSG));
@@ -92,6 +99,7 @@ public class InfluencerApplicationService {
         ApplicationStatus status = parseStatus(appStatus);
         if(Objects.isNull(status)) return handleOnErrorResume(new AppException(INVALID_STATUS), BAD_REQUEST.value());
         return applicationRepository.findByStatusAndCampaignPublicId(status, campaignId, setPage(settings))
+                .flatMap(this::addBanner)
                 .collectList()
                 .map(InfluencerApplicationConverter::mapToRecords)
                 .map(applicationRecords -> AppUtil.buildAppResponse(applicationRecords, APPLICATION_MSG));
@@ -102,7 +110,9 @@ public class InfluencerApplicationService {
         log.info("Getting Influencer Application Records by campaign ", publicId);
         return getCampaign(publicId)
                 .flatMap(campaign -> applicationRepository
-                        .findByCampaignId(campaign.getId(), setPage(settings)).collectList() )
+                        .findByCampaignId(campaign.getId(), setPage(settings))
+                        .flatMap(this::addBanner)
+                        .collectList() )
                 .map(InfluencerApplicationConverter::mapToRecords)
                 .map(applicationRecords -> AppUtil.buildAppResponse(applicationRecords, APPLICATION_MSG));
     }
@@ -111,6 +121,7 @@ public class InfluencerApplicationService {
     public Mono<AppResponse> getApplicationsByApplicant(String publicId, ReportSettings settings) {
         log.info("Getting Influencer Application Records by Applicant (", publicId, ")");
         return applicationRepository.findBySubmittedBy(publicId, setPage(settings))
+                .flatMap(this::addBanner)
                 .collectList()
                 .map(InfluencerApplicationConverter::mapToRecords)
                 .map(applicationRecords -> AppUtil.buildAppResponse(applicationRecords, APPLICATION_MSG));
@@ -127,6 +138,7 @@ public class InfluencerApplicationService {
             return handleOnErrorResume(new AppException(INVALID_DATE), BAD_REQUEST.value());
         }
         return applicationRepository.findByApplicationDateBetween(startDate, endDate, setPage(settings))
+                .flatMap(this::addBanner)
                 .collectList()
                 .map(InfluencerApplicationConverter::mapToRecords)
                 .map(applicationRecords -> AppUtil.buildAppResponse(applicationRecords, APPLICATION_MSG));
@@ -152,9 +164,11 @@ public class InfluencerApplicationService {
                     newRecord.setSubmittedBy(publicId);
                     return applicationRepository.save(newRecord);
                 })
+                .flatMap(application -> sendAlert(application, AlertType.NEW))
                 .map(InfluencerApplicationConverter::mapToRecord)
                 .map(applicationRecord -> AppUtil.buildAppResponse(applicationRecord, APPLICATION_MSG))
-                .onErrorResume(throwable -> handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
+                .onErrorResume(t ->
+                        handleOnErrorResume(new AppException(AppError.message(t.getMessage())), BAD_REQUEST.value()));
     }
 
     @PreAuthorize(ADMIN_BRAND)
@@ -172,9 +186,12 @@ public class InfluencerApplicationService {
                     if(ApplicationStatus.APPROVED == status)  application.setApprovedBy(publicId);
                     return applicationRepository.save(application);
                 })
+                .flatMap(this::addBanner)
+                .flatMap(application -> sendAlert(application, AlertType.REVIEW))
                 .map(InfluencerApplicationConverter::mapToRecord)
                 .map(applicationRecord -> AppUtil.buildAppResponse(applicationRecord, APPLICATION_MSG))
-                .onErrorResume(throwable -> handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
+                .onErrorResume(t ->
+                        handleOnErrorResume(new AppException(AppError.message(t.getMessage())), BAD_REQUEST.value()));
     }
 
     @PreAuthorize(ADMIN)
@@ -203,6 +220,31 @@ public class InfluencerApplicationService {
                                 .userProfileRecord(userProfileRecord)
                                 .build())
                 ).doOnNext(log::info);
+    }
+
+    private Mono<InfluencerApplication> addBanner(InfluencerApplication application) {
+        return registrationRepository.findByPublicId(application.getCampaignPublicId())
+                .map(registration ->  {
+                    application.setCampaignLogo(registration.getThumbnail());
+                    return application;
+                });
+    }
+
+    private Mono<InfluencerApplication> sendAlert(InfluencerApplication application, AlertType alertType) {
+        return registrationRepository.findByPublicId(application.getCampaignPublicId())
+                        .flatMap(registration -> alertEvent.registerAlert(AlertRecord.builder()
+                                .userPublicId(AlertType.NEW.name().equals(alertType.name()) ?
+                                        registration.getCreatedBy() : application.getSubmittedBy())
+                                .title(alertType.getTitle(alertType.name(), application.getCampaignName()))
+                                .message(alertType.getMessage(
+                                        alertType.getType(),
+                                        application.getCampaignName(),
+                                        application.getApplicationId()))
+                                .type(AlertType.CAMPAIGN.name())
+                                .typeStatus("")
+                                .status("NEW")
+                                .build()))
+                .map(aBoolean -> application);
     }
 
     private LocalDate parseDate(String date) {
