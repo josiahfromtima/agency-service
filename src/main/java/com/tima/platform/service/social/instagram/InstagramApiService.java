@@ -8,7 +8,9 @@ import com.tima.platform.model.api.response.instagram.account.MeAccount;
 import com.tima.platform.model.api.response.instagram.business.BasicBusinessInsight;
 import com.tima.platform.model.api.response.instagram.business.BusinessSummary;
 import com.tima.platform.model.api.response.instagram.business.MediaItem;
+import com.tima.platform.model.api.response.instagram.insight.Demographic;
 import com.tima.platform.model.api.response.instagram.token.LongLivedAccessToken;
+import com.tima.platform.model.constant.DemographicType;
 import com.tima.platform.util.LoggerHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,6 +46,12 @@ public class InstagramApiService {
     private String businessDiscoveryEndpoint;
     @Value("${social.ig.businessAccount}")
     private String businessAccount;
+    @Value("${social.ig.demographicsCountry}")
+    private String countryDemo;
+    @Value("${social.ig.demographicsCity}")
+    private String cityDemo;
+    @Value("${social.ig.demographicsPerson}")
+    private String personDemo;
 
 
     private static final String COMMENTS = "comments";
@@ -67,6 +75,34 @@ public class InstagramApiService {
                         headers(token), BusinessSummary.class)
                 .doOnNext(log::info)
                 .flatMap(this::calculateMedia);
+    }
+
+    public Mono<GraphApi<Demographic>> getMetaBusinessInsight(String token, String instagramId, DemographicType type) {
+        log.info("Getting the Meta Business Insight with Instagram Account ", instagramId, " for ", type);
+        if(type.equals(DemographicType.COUNTRY)) return getBusinessInsightForCountry(token, instagramId);
+        else if(type.equals(DemographicType.CITY)) return getBusinessInsightForCity(token, instagramId);
+        else return getBusinessInsightForBio(token, instagramId);
+    }
+
+    public Mono<GraphApi<Demographic>> getBusinessInsightForCountry(String token, String instagramId) {
+        log.info("Getting the Business Insight for country with Instagram Account ", instagramId);
+        return connectorService.get(template(countryDemo, instagramId), headers(token), GraphApi.class)
+                .doOnNext(log::info)
+                .flatMap(this::toDemographic);
+    }
+
+    public Mono<GraphApi<Demographic>> getBusinessInsightForCity(String token, String instagramId) {
+        log.info("Getting the Business Insight for city with Instagram Account ", instagramId);
+        return connectorService.get(template(cityDemo, instagramId), headers(token), GraphApi.class)
+                .doOnNext(log::info)
+                .flatMap(this::toDemographic);
+    }
+
+    public Mono<GraphApi<Demographic>> getBusinessInsightForBio(String token, String instagramId) {
+        log.info("Getting the Business Insight for age and gender with Instagram Account ", instagramId);
+        return connectorService.get(template(personDemo, instagramId), headers(token), GraphApi.class)
+                .doOnNext(log::info)
+                .flatMap(this::toDemographic);
     }
     public Mono<LongLivedAccessToken> getLTTLAccessToken(String token) {
         log.info("Getting the Long Lived Access Token");
@@ -110,6 +146,10 @@ public class InstagramApiService {
     private MeAccount convert(GraphApi<MeAccount> graphApi) {
         log.info("Ok see ", graphApi.data());
         return gsonInstance().fromJson(gsonInstance().toJson(graphApi.data().get(0)), MeAccount.class);
+    }
+
+    private Mono<GraphApi<Demographic>> toDemographic(GraphApi<Demographic> graphApi) {
+        return Mono.just(graphApi);
     }
 
     private Map<String, String> headers(String accessToken) {

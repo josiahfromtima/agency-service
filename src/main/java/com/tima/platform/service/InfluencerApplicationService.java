@@ -148,6 +148,7 @@ public class InfluencerApplicationService {
     public Mono<AppResponse> addApplication(InfluencerApplicationRecord appRecord, String publicId, String token) {
         log.info("Saving Influencer Application Record ", publicId);
         return aggregate(appRecord.campaignPublicId(), token)
+                .doOnNext(userCampaign -> log.info("Got User Campaign"))
                 .flatMap(userCampaign -> {
                     InfluencerApplication newRecord = InfluencerApplicationConverter.mapToEntity(appRecord);
                     newRecord.setCampaignId(userCampaign.campaign().getId());
@@ -164,6 +165,7 @@ public class InfluencerApplicationService {
                     newRecord.setSubmittedBy(publicId);
                     return applicationRepository.save(newRecord);
                 })
+                .doOnNext(application -> log.info("Preparing to notice user"))
                 .flatMap(application -> sendAlert(application, AlertType.NEW))
                 .map(InfluencerApplicationConverter::mapToRecord)
                 .map(applicationRecord -> AppUtil.buildAppResponse(applicationRecord, APPLICATION_MSG))
@@ -215,6 +217,7 @@ public class InfluencerApplicationService {
     private Mono<UserCampaignRecord> aggregate(String publicId, String token) {
         return getCampaign(publicId)
                 .flatMap(campaignRegistration -> userProfileService.getUserProfile(token)
+                        .doOnNext(userProfileRecord -> log.info("Got user profile for brand"))
                         .map(userProfileRecord -> UserCampaignRecord.builder()
                                 .campaign(campaignRegistration)
                                 .userProfileRecord(userProfileRecord)

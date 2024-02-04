@@ -5,6 +5,7 @@ import com.tima.platform.config.CustomValidator;
 import com.tima.platform.model.api.ApiResponse;
 import com.tima.platform.model.api.request.ClientSelectedSocialMedia;
 import com.tima.platform.model.api.response.SocialMediaRecord;
+import com.tima.platform.model.constant.DemographicType;
 import com.tima.platform.service.social.ClientSocialMediaService;
 import com.tima.platform.service.social.SocialMediaService;
 import com.tima.platform.service.social.insight.ClientBusinessInsightService;
@@ -151,6 +152,19 @@ public class SocialMediaResourceHandler {
         log.info("Get Other Business Social Media insight Requested::",
                 request.headers().firstHeader(X_FORWARD_FOR));
         return buildServerResponse(insightService.getBusinessBasicInsights(mediaName, mediaHandle));
+    }
+
+    public Mono<ServerResponse> getBusinessClientInsight(ServerRequest request)  {
+        String publicId = request.pathVariable("publicId");
+        String mediaName = request.pathVariable("name");
+        String type = request.queryParam("type").orElse(DemographicType.AGE_GENDER.name());
+        log.info("Get Business Client Social Media insight Requested:: ", mediaName,
+                request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(insightService.getBusinessInsights(mediaName, publicId, type));
+    }
+    public Mono<ServerResponse> getDemographicTypes(ServerRequest request)  {
+        log.info("Get insight Demographic Types Requested:: ", request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(insightService.getDemographicTypes());
     }
 
 

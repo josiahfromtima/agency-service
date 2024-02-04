@@ -19,6 +19,8 @@ public class SocialMediaResourceConfig {
     public static final String API_V1_URL = "/v1";
     public static final String SM_BASE = API_V1_URL + "/social-media";
     public static final String SM_USER = SM_BASE + "/linked";
+    public static final String SM_DEMOGRAPHIC = SM_BASE + "/demographic";
+    public static final String SM_INSIGHT_DEMOGRAPHIC = SM_BASE + "/{publicId}/demographic/{name}";
     public static final String DELETE_SM_USER = SM_BASE + "/linked/{name}";
     public static final String SM_USER_ADD_EDIT = SM_USER + "/user/{publicId}";
     public static final String GET_SM = API_V1_URL + "/social-media/_public";
@@ -41,6 +43,8 @@ public class SocialMediaResourceConfig {
                 .GET(GET_SM, accept(MediaType.APPLICATION_JSON), handler::getAllSocialMediaPublic)
                 .GET(GET_SM_INSIGHT, accept(MediaType.APPLICATION_JSON), handler::getBasicInsight)
                 .GET(GET_SM_BIZ_INSIGHT, accept(MediaType.APPLICATION_JSON), handler::getBusinessBasicInsight)
+                .GET(SM_DEMOGRAPHIC, accept(MediaType.APPLICATION_JSON), handler::getDemographicTypes)
+                .GET(SM_INSIGHT_DEMOGRAPHIC, accept(MediaType.APPLICATION_JSON), handler::getBusinessClientInsight)
                 .GET(SM_BASE, accept(MediaType.APPLICATION_JSON), handler::getAllSocialMediaAdmin)
                 .POST(SM_BASE, accept(MediaType.APPLICATION_JSON)
                         .and(contentType(MediaType.APPLICATION_JSON)), handler::addSocialMedia)
