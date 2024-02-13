@@ -13,9 +13,9 @@ public interface NativeSql {
             "LIMIT :top";
 
     String CAMPAIGN_SEARCH_WITH_FILTER = "SELECT * FROM campaign_registration " +
-            "WHERE lower(influencer_category) LIKE :category OR " +
-            "lower(audience_size) LIKE :size OR " +
-            "lower(audience_age_group) LIKE :age OR " +
+            "WHERE lower(influencer_category) LIKE :category AND " +
+            "lower(audience_size) LIKE :size AND " +
+            "lower(audience_age_group) LIKE :age AND " +
             "lower(audience_location) LIKE :location ";
 
     String RECOMMENDED_CAMPAIGN_STATEMENT = "SELECT * FROM campaign_registration " +

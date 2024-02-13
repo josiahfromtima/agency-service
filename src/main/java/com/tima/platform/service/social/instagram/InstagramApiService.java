@@ -1,5 +1,9 @@
 package com.tima.platform.service.social.instagram;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.tima.platform.config.client.HttpConnectorService;
 import com.tima.platform.model.api.AppResponse;
 import com.tima.platform.model.api.response.instagram.GraphApi;
@@ -8,17 +12,23 @@ import com.tima.platform.model.api.response.instagram.account.MeAccount;
 import com.tima.platform.model.api.response.instagram.business.BasicBusinessInsight;
 import com.tima.platform.model.api.response.instagram.business.BusinessSummary;
 import com.tima.platform.model.api.response.instagram.business.MediaItem;
+import com.tima.platform.model.api.response.instagram.insight.Breakdown;
 import com.tima.platform.model.api.response.instagram.insight.Demographic;
+import com.tima.platform.model.api.response.instagram.insight.FollowerDemographic;
+import com.tima.platform.model.api.response.instagram.insight.result.Breakdowns;
+import com.tima.platform.model.api.response.instagram.insight.result.Results;
 import com.tima.platform.model.api.response.instagram.token.LongLivedAccessToken;
 import com.tima.platform.model.constant.DemographicType;
+import com.tima.platform.util.AppUtil;
 import com.tima.platform.util.LoggerHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.tima.platform.model.constant.AppConstant.*;
@@ -77,28 +87,28 @@ public class InstagramApiService {
                 .flatMap(this::calculateMedia);
     }
 
-    public Mono<GraphApi<Demographic>> getMetaBusinessInsight(String token, String instagramId, DemographicType type) {
+    public Mono<FollowerDemographic> getMetaBusinessInsight(String token, String instagramId, DemographicType type) {
         log.info("Getting the Meta Business Insight with Instagram Account ", instagramId, " for ", type);
         if(type.equals(DemographicType.COUNTRY)) return getBusinessInsightForCountry(token, instagramId);
         else if(type.equals(DemographicType.CITY)) return getBusinessInsightForCity(token, instagramId);
         else return getBusinessInsightForBio(token, instagramId);
     }
 
-    public Mono<GraphApi<Demographic>> getBusinessInsightForCountry(String token, String instagramId) {
+    public Mono<FollowerDemographic> getBusinessInsightForCountry(String token, String instagramId) {
         log.info("Getting the Business Insight for country with Instagram Account ", instagramId);
         return connectorService.get(template(countryDemo, instagramId), headers(token), GraphApi.class)
                 .doOnNext(log::info)
                 .flatMap(this::toDemographic);
     }
 
-    public Mono<GraphApi<Demographic>> getBusinessInsightForCity(String token, String instagramId) {
+    public Mono<FollowerDemographic> getBusinessInsightForCity(String token, String instagramId) {
         log.info("Getting the Business Insight for city with Instagram Account ", instagramId);
         return connectorService.get(template(cityDemo, instagramId), headers(token), GraphApi.class)
                 .doOnNext(log::info)
                 .flatMap(this::toDemographic);
     }
 
-    public Mono<GraphApi<Demographic>> getBusinessInsightForBio(String token, String instagramId) {
+    public Mono<FollowerDemographic> getBusinessInsightForBio(String token, String instagramId) {
         log.info("Getting the Business Insight for age and gender with Instagram Account ", instagramId);
         return connectorService.get(template(personDemo, instagramId), headers(token), GraphApi.class)
                 .doOnNext(log::info)
@@ -135,6 +145,9 @@ public class InstagramApiService {
                         .totalMedia(businessSummary.businessDiscovery().mediaCount())
                         .totalComments(counts.get(COMMENTS))
                         .totalLikes(counts.get(LIKES))
+                        .avgEngagement(calculateEngagementRate(
+                                counts.get(COMMENTS)+counts.get(LIKES),
+                                businessSummary.businessDiscovery().followersCount()) )
                 .build() );
     }
 
@@ -148,8 +161,88 @@ public class InstagramApiService {
         return gsonInstance().fromJson(gsonInstance().toJson(graphApi.data().get(0)), MeAccount.class);
     }
 
-    private Mono<GraphApi<Demographic>> toDemographic(GraphApi<Demographic> graphApi) {
-        return Mono.just(graphApi);
+    private BigDecimal calculateEngagementRate(long totalEngagements, long totalFollowers) {
+        log.info("Engagements ", totalEngagements, " Followers ", totalFollowers);
+        if(totalFollowers == 0) return BigDecimal.ZERO;
+        return BigDecimal.valueOf((double) totalEngagements / totalFollowers)
+                .multiply(new BigDecimal("100"))
+                .setScale(2, RoundingMode.UP);
+    }
+
+    private Mono<FollowerDemographic> toDemographic(GraphApi<Demographic> graphApi) {
+        if(graphApi.data().isEmpty()) return Mono.empty();
+
+        JsonObject jsonObject = getJsonObject(json(graphApi.data()));
+        Demographic demographic = (Objects.isNull(jsonObject)) ? defaultDemo() : buildDemoGraphic(jsonObject);
+
+        return Mono.just(FollowerDemographic.builder()
+                        .data(List.of(demographic))
+                .build());
+    }
+
+    private Demographic defaultDemo() {
+        return Demographic.builder()
+                .totalValue(Breakdown.builder().breakdowns(new ArrayList<>()).build())
+                .build();
+    }
+
+    private Demographic buildDemoGraphic(JsonObject jsonObject) {
+        Set<String> keys = jsonObject.keySet();
+        log.info("Demographic ", keys);
+        return Demographic.builder()
+                .name(getStringValue(jsonObject,"name"))
+                .title(getStringValue(jsonObject,"title"))
+                .description(getStringValue(jsonObject,"description"))
+                .period(getStringValue(jsonObject,"period"))
+                .totalValue(buildBreakdown(jsonObject.getAsJsonObject("total_value")))
+                .build();
+    }
+
+    private Breakdown buildBreakdown(JsonObject jsonObject) {
+        JsonArray jsonArray = jsonObject.getAsJsonArray("breakdowns")
+                .get(0)
+                .getAsJsonObject()
+                .getAsJsonArray("results");
+
+        List<Breakdowns> breakdownsList = jsonArray.asList()
+                .stream()
+                .map(jsonElement -> Breakdowns.builder().results(
+                        Results.builder()
+                                .dimensionValues(getList( jsonElement
+                                        .getAsJsonObject()
+                                        .getAsJsonArray("dimension_values")
+                                        .asList()) )
+                                .value(jsonElement.getAsJsonObject().get("value").getAsLong())
+                                .build()
+                        )
+                        .build() )
+                        .toList();
+        return Breakdown.builder()
+                .breakdowns(breakdownsList)
+                .build();
+    }
+
+    private String getStringValue(JsonObject jsonObject, String key) {
+        return jsonObject.get(key).getAsString();
+    }
+
+    private JsonObject getJsonObject(String graphApi) {
+        JsonArray jsonArray = JsonParser
+                .parseString(graphApi)
+                .getAsJsonArray();
+        if(jsonArray.isEmpty()) return null;
+        return jsonArray.get(0).getAsJsonObject();
+    }
+
+    private List<String> getList(List<JsonElement> jsonElements) {
+        return jsonElements.stream()
+                .map(JsonElement::getAsString)
+                .toList();
+    }
+
+
+    private static String json(Object value) {
+        return AppUtil.gsonInstance().toJson(value);
     }
 
     private Map<String, String> headers(String accessToken) {

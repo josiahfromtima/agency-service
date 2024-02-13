@@ -15,5 +15,5 @@ import java.time.Instant;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record BookmarkRecord(@NotBlank(message = "Title is required")
                              String title,
-                             String campaignPublicId,
+                             String bookmarkPublicId,
                              Instant createdOn) {}

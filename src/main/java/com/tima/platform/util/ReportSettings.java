@@ -61,4 +61,12 @@ public class ReportSettings {
             }
             return this;
         }
+        public ReportSettings toInstant(String date) {
+            try {
+                this.end = Instant.parse(date);
+            }catch (Exception ex){
+                this.end = Instant.now();
+            }
+            return this;
+        }
 }

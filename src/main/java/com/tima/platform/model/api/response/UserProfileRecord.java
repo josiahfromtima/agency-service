@@ -7,4 +7,4 @@ package com.tima.platform.model.api.response;
  */
 public record UserProfileRecord(String firstName, String middleName, String lastName, String email,
                                 String phoneNumber, String userType, String companyName, String website,
-                                String language, String profilePicture, String registeredDocument) {}
+                                String language, String profilePicture, String registeredDocument, String createdOn) {}

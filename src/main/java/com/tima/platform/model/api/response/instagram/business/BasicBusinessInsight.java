@@ -3,6 +3,8 @@ package com.tima.platform.model.api.response.instagram.business;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 
+import java.math.BigDecimal;
+
 /**
  * @Author: Josiah Adetayo
  * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
@@ -19,4 +21,5 @@ public record BasicBusinessInsight(String businessOwnerIgId,
                                    long followers,
                                    long totalMedia,
                                    long totalComments,
-                                   long totalLikes) {}
+                                   long totalLikes,
+                                   BigDecimal avgEngagement) {}

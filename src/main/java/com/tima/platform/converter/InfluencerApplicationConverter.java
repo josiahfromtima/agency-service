@@ -1,6 +1,7 @@
 package com.tima.platform.converter;
 
 import com.tima.platform.domain.InfluencerApplication;
+import com.tima.platform.model.api.request.InfluencerRecord;
 import com.tima.platform.model.api.response.InfluencerApplicationRecord;
 import com.tima.platform.model.constant.ApplicationStatus;
 
@@ -58,16 +59,34 @@ public class InfluencerApplicationConverter {
                 .build();
     }
 
+    public static synchronized InfluencerRecord mapToInfluencer(InfluencerApplication entity) {
+        return InfluencerRecord.builder()
+                .publicId(entity.getSubmittedBy())
+                .username(entity.getUsername())
+                .email(entity.getEmail())
+                .fullName(entity.getFullName())
+                .phoneNumber(entity.getPhoneNumber())
+                .profilePicture(entity.getProfilePicture())
+                .build();
+    }
+
     public static synchronized List<InfluencerApplicationRecord> mapToRecords(List<InfluencerApplication> entities) {
         return entities
                 .stream()
                 .map(InfluencerApplicationConverter::mapToRecord)
                 .toList();
     }
+
     public static synchronized List<InfluencerApplication> mapToEntities(List<InfluencerApplicationRecord> records) {
         return records
                 .stream()
                 .map(InfluencerApplicationConverter::mapToEntity)
+                .toList();
+    }
+    public static synchronized List<InfluencerRecord> mapToInfluencers(List<InfluencerApplication> entities) {
+        return entities
+                .stream()
+                .map(InfluencerApplicationConverter::mapToInfluencer)
                 .toList();
     }
 

@@ -8,6 +8,7 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 import static com.tima.platform.repository.projection.NativeSql.TOP_CAMPAIGN_STATEMENT;
@@ -22,10 +23,13 @@ public interface InfluencerApplicationRepository extends ReactiveCrudRepository<
     Flux<InfluencerApplication> findByStatus(ApplicationStatus status, Pageable pageable);
     Flux<InfluencerApplication> findByStatusAndCampaignPublicId(ApplicationStatus status, String id, Pageable pageable);
     Flux<InfluencerApplication> findByStatusAndCampaignPublicId(ApplicationStatus status, String id);
+    Flux<InfluencerApplication> findByCampaignPublicId(String campaignId);
     Flux<InfluencerApplication> findByCampaignId(Integer id, Pageable pageable);
     Flux<InfluencerApplication> findBySubmittedBy(String publicId, Pageable pageable);
+    Flux<InfluencerApplication> findBySubmittedBy(String publicId);
     Flux<InfluencerApplication> findByApplicationDateBetween(LocalDate startDate, LocalDate endDate, Pageable pageable);
     Mono<InfluencerApplication> findByApplicationId(String appId);
+
 
     @Query(TOP_CAMPAIGN_STATEMENT)
     <T> Flux<T> getTopCampaign(int top, Class<T> type);

@@ -4,7 +4,7 @@ import com.tima.platform.config.AuthTokenConfig;
 import com.tima.platform.config.CustomValidator;
 import com.tima.platform.model.api.ApiResponse;
 import com.tima.platform.model.api.response.BookmarkRecord;
-import com.tima.platform.service.BookmarkService;
+import com.tima.platform.service.bookmark.BookmarkManager;
 import com.tima.platform.util.LoggerHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -15,6 +15,8 @@ import reactor.core.publisher.Mono;
 
 import static com.tima.platform.model.api.ApiResponse.buildServerResponse;
 import static com.tima.platform.model.api.ApiResponse.reportSettings;
+import static com.tima.platform.model.constant.BookmarkType.CAMPAIGN;
+import static com.tima.platform.model.constant.BookmarkType.INFLUENCER;
 
 /**
  * @Author: Josiah Adetayo
@@ -26,7 +28,7 @@ import static com.tima.platform.model.api.ApiResponse.reportSettings;
 public class BookmarkHandler {
     LoggerHelper log = LoggerHelper.newInstance(BookmarkHandler.class.getName());
 
-    private final BookmarkService bookmarkService;
+    private final BookmarkManager bookmarkService;
     private final CustomValidator validator;
 
     private static final String X_FORWARD_FOR = "X-Forwarded-For";
@@ -38,14 +40,14 @@ public class BookmarkHandler {
         log.info("Get Bookmarks Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
                 .map(ApiResponse::getPublicIdFromToken)
-                .map(id -> bookmarkService.getBookmarks(id, reportSettings(request)))
+                .map(id -> bookmarkService.getInstance(CAMPAIGN.getType()).getBookmarks(id, reportSettings(request)))
                 .flatMap(ApiResponse::buildServerResponse);
     }
 
     public Mono<ServerResponse> getBookmark(ServerRequest request)  {
         String title = request.pathVariable("title");
         log.info("Get Bookmark Requested", request.headers().firstHeader(X_FORWARD_FOR));
-        return buildServerResponse(bookmarkService.getOneBookmark(title));
+        return buildServerResponse(bookmarkService.getInstance(CAMPAIGN.getType()).getOneBookmark(title));
     }
 
     public Mono<ServerResponse> addNewBookmark(ServerRequest request)  {
@@ -56,14 +58,48 @@ public class BookmarkHandler {
         return jwtAuthToken
                 .map(ApiResponse::getPublicIdFromToken)
                 .flatMap(id -> recordMono
-                        .map(bookmarkRecord ->  bookmarkService.bookmarkCampaign(id, bookmarkRecord)))
+                        .map(bookmarkRecord ->  bookmarkService.getInstance(CAMPAIGN.getType())
+                                .addBookmark(id, bookmarkRecord)))
                 .flatMap(ApiResponse::buildServerResponse);
     }
 
     public Mono<ServerResponse> deleteBookmark(ServerRequest request)  {
         String title = request.pathVariable("title");
         log.info("Delete Bookmark Requested", request.headers().firstHeader(X_FORWARD_FOR));
-        return buildServerResponse(bookmarkService.deleteBookmark(title));
+        return buildServerResponse(bookmarkService.getInstance(CAMPAIGN.getType()).deleteBookmark(title));
+    }
+    public Mono<ServerResponse> getProfileUserBookmarks(ServerRequest request)  {
+        Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
+        log.info("Get Influencer Bookmarks Requested", request.headers().firstHeader(X_FORWARD_FOR));
+        return jwtAuthToken
+                .map(ApiResponse::getPublicIdFromToken)
+                .map(id -> bookmarkService.getInstance(INFLUENCER.getType()).getBookmarks(id, reportSettings(request)))
+                .flatMap(ApiResponse::buildServerResponse);
+    }
+
+    public Mono<ServerResponse> getProfileBookmark(ServerRequest request)  {
+        String title = request.pathVariable("title");
+        log.info("Get Bookmark Requested", request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(bookmarkService.getInstance(INFLUENCER.getType()).getOneBookmark(title));
+    }
+
+    public Mono<ServerResponse> addNewProfileBookmark(ServerRequest request)  {
+        Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
+        Mono<BookmarkRecord> recordMono = request.bodyToMono(BookmarkRecord.class)
+                .doOnNext(validator::validateEntries);
+        log.info("Added a new bookmark Requested", request.headers().firstHeader(X_FORWARD_FOR));
+        return jwtAuthToken
+                .map(ApiResponse::getPublicIdFromToken)
+                .flatMap(id -> recordMono
+                        .map(bookmarkRecord ->  bookmarkService.getInstance(INFLUENCER.getType())
+                                .addBookmark(id, bookmarkRecord)))
+                .flatMap(ApiResponse::buildServerResponse);
+    }
+
+    public Mono<ServerResponse> deleteProfileBookmark(ServerRequest request)  {
+        String title = request.pathVariable("title");
+        log.info("Delete Bookmark Requested", request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(bookmarkService.getInstance(INFLUENCER.getType()).deleteBookmark(title));
     }
 
 }

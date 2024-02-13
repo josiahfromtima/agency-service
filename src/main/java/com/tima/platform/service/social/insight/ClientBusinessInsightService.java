@@ -84,6 +84,7 @@ public class ClientBusinessInsightService {
                 ).map(businessInsight -> buildAppResponse(businessInsight, String.format(INSIGHT_MSG, name)))
                 .switchIfEmpty(handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
     }
+    @PreAuthorize(ADMIN_BRAND_INFLUENCER)
     public Mono<AppResponse> getBusinessBasicInsights(String name, String handle) {
             log.info("Get Other Business Basic Insight from ", name, " ", handle);
             if(Objects.isNull(socialMediaInsights.get(name)))

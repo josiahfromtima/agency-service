@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
  * @Date: 2/1/24
  */
 public interface BookmarkRepository extends ReactiveCrudRepository<Bookmark, Integer> {
-    Mono<Bookmark> findByTitle(String title);
+    Mono<Bookmark> findByTitleAndType(String title, String type);
 
-    Flux<Bookmark> findByUserPublicId(String publicId, Pageable pageable);
+    Flux<Bookmark> findByUserPublicIdAndType(String publicId, String type, Pageable pageable);
 }

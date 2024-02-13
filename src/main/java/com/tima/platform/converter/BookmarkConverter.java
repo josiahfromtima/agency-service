@@ -17,14 +17,14 @@ public class BookmarkConverter {
     public static synchronized Bookmark mapToEntity(BookmarkRecord dto) {
         return Bookmark.builder()
                 .title(getOrDefault(dto.title(), ""))
-                .campaignPublicId(getOrDefault(dto.campaignPublicId(), ""))
+                .bookmarkPublicId(getOrDefault(dto.bookmarkPublicId(), ""))
                 .build();
     }
 
     public static synchronized BookmarkRecord mapToRecord(Bookmark entity) {
         return  BookmarkRecord.builder()
                 .title(entity.getTitle())
-                .campaignPublicId(entity.getCampaignPublicId())
+                .bookmarkPublicId(entity.getBookmarkPublicId())
                 .createdOn(entity.getCreatedOn())
                 .build();
     }

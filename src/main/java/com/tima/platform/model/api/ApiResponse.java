@@ -2,6 +2,7 @@ package com.tima.platform.model.api;
 
 import com.tima.platform.model.api.request.JwtRecord;
 import com.tima.platform.util.CampaignSearchSetting;
+import com.tima.platform.util.InfluencerSearchSetting;
 import com.tima.platform.util.ReportSettings;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -54,8 +55,14 @@ public class ApiResponse {
     public static CampaignSearchSetting searchSettings(ServerRequest request) {
         return CampaignSearchSetting.instance()
                 .category(request.queryParam("category").orElse(""))
-                .audienceSize(request.queryParam("audienceSize").orElse(""))
-                .audienceAge(request.queryParam("audienceAge").orElse(""))
-                .audienceLocation(request.queryParam("audienceLocation").orElse("0"));
+                .audienceSize(request.queryParam("size").orElse(""))
+                .audienceAge(request.queryParam("age").orElse(""))
+                .audienceLocation(request.queryParam("location").orElse(""));
+    }
+    public static InfluencerSearchSetting searchSettingsProfile(ServerRequest request) {
+        return InfluencerSearchSetting.instance()
+                .email(request.queryParam("email").orElse(""))
+                .name(request.queryParam("name").orElse(""))
+                .username(request.queryParam("username").orElse(""));
     }
 }

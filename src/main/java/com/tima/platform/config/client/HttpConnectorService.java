@@ -95,6 +95,7 @@ public class HttpConnectorService {
     }
 
     public <T> Mono<T> get(String endpoint, Map<String, String> headers, Class<T> returnType) {
+        log.info(endpoint);
         return webClient.get()
                 .uri(endpoint)
                 .headers(httpHeaders -> headers.forEach(httpHeaders::set)  )

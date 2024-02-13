@@ -15,21 +15,21 @@ import java.time.Instant;
 /**
  * @Author: Josiah Adetayo
  * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
- * @Date: 2/1/24
+ * @Date: 2/6/24
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table("public.bookmark")
-public class Bookmark implements Serializable, Persistable<Integer> {
+@Table("public.iso_country")
+public class CountryISO implements Serializable, Persistable<Integer> {
 
     @Id
     private Integer id;
-    private String userPublicId;
-    private String title;
-    private String bookmarkPublicId;
-    private String type;
+    private String name;
+    private String twoLetterCode;
+    private String threeLetterCode;
+    private Integer code;
     private Instant createdOn;
 
     @Override

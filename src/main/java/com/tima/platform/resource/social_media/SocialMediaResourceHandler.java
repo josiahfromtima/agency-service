@@ -139,10 +139,11 @@ public class SocialMediaResourceHandler {
     public Mono<ServerResponse> getBasicInsight(ServerRequest request)  {
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
         String mediaName = request.pathVariable("name");
+        String publicId = request.queryParam("userPublicId").orElse("");
         log.info("Get User Social Media insight Requested::", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
                 .map(ApiResponse::getPublicIdFromToken)
-                .map(id ->  insightService.getBasicInsights(id, mediaName))
+                .map(id ->  insightService.getBasicInsights(publicId.isEmpty() ? id : publicId, mediaName))
                 .flatMap(ApiResponse::buildServerResponse);
     }
 

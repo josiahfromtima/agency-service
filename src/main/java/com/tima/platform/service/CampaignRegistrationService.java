@@ -209,13 +209,13 @@ public class CampaignRegistrationService {
     }
 
     private Flux<CampaignRegistration> getRegistrationSearch(CampaignSearchSetting setting) {
+        log.info("Searchimg with filter ", setting);
         setting.setCategory(padSearchParam(setting.getCategory()));
         setting.setAudienceAge(padSearchParam(setting.getAudienceAge()));
         setting.setAudienceSize(padSearchParam(setting.getAudienceSize()));
         setting.setAudienceLocation(padSearchParam(setting.getAudienceLocation()));
         return registrationRepository.getSearchResult(setting.getCategory(), setting.getAudienceSize(),
-                        setting.getAudienceAge(), setting.getAudienceLocation())
-                .switchIfEmpty(handleOnErrorResume(new AppException(INVALID_CAMPAIGN), BAD_REQUEST.value()));
+                        setting.getAudienceAge(), setting.getAudienceLocation());
     }
 
     private CampaignRegistrationRecord registerPart(JsonNode jsonNode, RegistrationType type) {
