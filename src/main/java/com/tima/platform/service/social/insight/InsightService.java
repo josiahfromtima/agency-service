@@ -9,7 +9,8 @@ import reactor.core.publisher.Mono;
  * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
  * @Date: 1/27/24
  */
-public interface InsightService<T, E> {
+public interface InsightService<T, E, M> {
     Mono<T> getUserBasicBusinessInsight(ClientSelectedSocialMedia media, String token);
     Mono<E> getUserBasicBusinessInsight(ClientSelectedSocialMedia userId, String token, DemographicType type);
+    Mono<M> getUserBusinessInsightMetrics(ClientSelectedSocialMedia userId, String token);
 }

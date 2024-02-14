@@ -8,6 +8,7 @@ import com.tima.platform.model.api.response.instagram.business.BasicBusinessInsi
 import com.tima.platform.model.api.response.instagram.insight.Breakdown;
 import com.tima.platform.model.api.response.instagram.insight.Demographic;
 import com.tima.platform.model.api.response.instagram.insight.FollowerDemographic;
+import com.tima.platform.model.api.response.instagram.insight.metrics.InsightMetrics;
 import com.tima.platform.model.api.response.instagram.insight.result.Breakdowns;
 import com.tima.platform.model.api.response.instagram.insight.result.Results;
 import com.tima.platform.model.constant.DemographicType;
@@ -33,7 +34,8 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
  */
 @Service
 @RequiredArgsConstructor
-public class InstagramBusinessInsight implements InsightService<BasicBusinessInsight, List<DemographicStatistic>> {
+public class InstagramBusinessInsight
+        implements InsightService<BasicBusinessInsight, List<DemographicStatistic>, List<InsightMetrics>> {
     private final LoggerHelper log = LoggerHelper.newInstance(InstagramBusinessInsight.class.getName());
     private final InstagramApiService apiService;
     private final CountryISORepository isoRepository;
@@ -53,6 +55,11 @@ public class InstagramBusinessInsight implements InsightService<BasicBusinessIns
                                                       DemographicType type) {
         return getStatistic(
                 apiService.getMetaBusinessInsight(userId.accessToken(), userId.businessId(), type), type);
+    }
+
+    @Override
+    public Mono<List<InsightMetrics>> getUserBusinessInsightMetrics(ClientSelectedSocialMedia media, String token) {
+        return apiService.getBusinessInsightMetric(token, media.businessId());
     }
 
     private Mono<List<DemographicStatistic>> getStatistic(Mono<FollowerDemographic> graphApi, DemographicType type) {

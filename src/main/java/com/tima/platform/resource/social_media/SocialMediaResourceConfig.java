@@ -27,6 +27,7 @@ public class SocialMediaResourceConfig {
     public static final String DELETE_SM = API_V1_URL + "/social-media/{name}";
     public static final String GET_SM_INSIGHT = SM_BASE + "/{name}/insight";
     public static final String GET_SM_BIZ_INSIGHT = SM_BASE + "/{name}/insight/explore";
+    public static final String GET_SM_INSIGHT_METRICS = SM_BASE + "/{name}/insight/metrics";
     public static final String IG_SM_BASE = API_V1_URL + "/meta";
     public static final String IG_SM_ACCOUNT = IG_SM_BASE + "/account";
     public static final String IG_SM_BA = IG_SM_BASE + "/ig-account/{pageId}";
@@ -43,6 +44,7 @@ public class SocialMediaResourceConfig {
                 .GET(GET_SM, accept(MediaType.APPLICATION_JSON), handler::getAllSocialMediaPublic)
                 .GET(GET_SM_INSIGHT, accept(MediaType.APPLICATION_JSON), handler::getBasicInsight)
                 .GET(GET_SM_BIZ_INSIGHT, accept(MediaType.APPLICATION_JSON), handler::getBusinessBasicInsight)
+                .GET(GET_SM_INSIGHT_METRICS, accept(MediaType.APPLICATION_JSON), handler::getBusinessInsightMetrics)
                 .GET(SM_DEMOGRAPHIC, accept(MediaType.APPLICATION_JSON), handler::getDemographicTypes)
                 .GET(SM_INSIGHT_DEMOGRAPHIC, accept(MediaType.APPLICATION_JSON), handler::getBusinessClientInsight)
                 .GET(SM_BASE, accept(MediaType.APPLICATION_JSON), handler::getAllSocialMediaAdmin)

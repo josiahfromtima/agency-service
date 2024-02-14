@@ -37,7 +37,7 @@ public class ClientBusinessInsightService {
     private final ClientSocialMediaRepository mediaRepository;
     private final SocialMediaService socialMediaService;
     private final InstagramBusinessInsight instagramBusinessInsight;
-    Map<String, InsightService<?, ?>> socialMediaInsights = new HashMap<>();
+    Map<String, InsightService<?, ?, ?>> socialMediaInsights = new HashMap<>();
 
     private static final String INVALID_NAME = "Selected Social media feature is not available yet. Or name is invalid";
     private static final String INVALID_TYPE = "Selected demographic type is invalid";
@@ -94,6 +94,20 @@ public class ClientBusinessInsightService {
                                     .getUserBasicBusinessInsight(build(handle), socialMedia.getAccessToken())
                     ).map(businessInsight -> buildAppResponse(businessInsight, String.format(INSIGHT_MSG, name)))
                     .switchIfEmpty(handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
+    }
+
+    @PreAuthorize(ADMIN_BRAND_INFLUENCER)
+    public Mono<AppResponse> getBusinessInsightMetrics(String name, String publicId) {
+        log.info("Get Other Business Insight Metrics from ", name, " ", publicId);
+        if(Objects.isNull(socialMediaInsights.get(name)))
+            return handleOnErrorResume(new AppException(INVALID_NAME), BAD_REQUEST.value());
+        return socialMediaService.getSocialMedia(name)
+                .flatMap(socialMedia ->  mediaRepository.findByUserId(publicId)
+                        .flatMap(clientSocialMedia -> socialMediaInsights.get(name)
+                                .getUserBusinessInsightMetrics(getSelectedMedia(name, clientSocialMedia),
+                                        socialMedia.getAccessToken()) )
+                ).map(businessInsight -> buildAppResponse(businessInsight, String.format(INSIGHT_MSG, name)))
+                .switchIfEmpty(handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
     }
 
     private ClientSelectedSocialMedia getSelectedMedia(String name, ClientSocialMedia media) {

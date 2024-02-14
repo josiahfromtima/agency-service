@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.tima.platform.config.client.HttpConnectorService;
 import com.tima.platform.model.api.AppResponse;
 import com.tima.platform.model.api.response.instagram.GraphApi;
@@ -15,6 +16,7 @@ import com.tima.platform.model.api.response.instagram.business.MediaItem;
 import com.tima.platform.model.api.response.instagram.insight.Breakdown;
 import com.tima.platform.model.api.response.instagram.insight.Demographic;
 import com.tima.platform.model.api.response.instagram.insight.FollowerDemographic;
+import com.tima.platform.model.api.response.instagram.insight.metrics.InsightMetrics;
 import com.tima.platform.model.api.response.instagram.insight.result.Breakdowns;
 import com.tima.platform.model.api.response.instagram.insight.result.Results;
 import com.tima.platform.model.api.response.instagram.token.LongLivedAccessToken;
@@ -62,6 +64,8 @@ public class InstagramApiService {
     private String cityDemo;
     @Value("${social.ig.demographicsPerson}")
     private String personDemo;
+    @Value("${social.ig.insightMetrics}")
+    private String insightMetrics;
 
 
     private static final String COMMENTS = "comments";
@@ -113,6 +117,13 @@ public class InstagramApiService {
         return connectorService.get(template(personDemo, instagramId), headers(token), GraphApi.class)
                 .doOnNext(log::info)
                 .flatMap(this::toDemographic);
+    }
+
+    public Mono<List<InsightMetrics>> getBusinessInsightMetric(String token, String instagramId) {
+        log.info("Getting the Business Insight Metrics for Instagram Account ", instagramId);
+        return connectorService.get(template(insightMetrics, instagramId), headers(token), GraphApi.class)
+                .doOnNext(log::info)
+                .map(this::toMetrics);
     }
     public Mono<LongLivedAccessToken> getLTTLAccessToken(String token) {
         log.info("Getting the Long Lived Access Token");
@@ -184,6 +195,11 @@ public class InstagramApiService {
         return Demographic.builder()
                 .totalValue(Breakdown.builder().breakdowns(new ArrayList<>()).build())
                 .build();
+    }
+
+    private List<InsightMetrics> toMetrics(GraphApi<InsightMetrics> graphApi) {
+        return gsonInstance().fromJson(gsonInstance().toJson(graphApi.data()),
+                new TypeToken<List<InsightMetrics>>(){}.getType());
     }
 
     private Demographic buildDemoGraphic(JsonObject jsonObject) {

@@ -168,5 +168,12 @@ public class SocialMediaResourceHandler {
         return buildServerResponse(insightService.getDemographicTypes());
     }
 
+    public Mono<ServerResponse> getBusinessInsightMetrics(ServerRequest request)  {
+        String mediaName = request.pathVariable("name");
+        String publicId = request.queryParam("userPublicId").orElse("");
+        log.info("Get User Social Media insight Metric Requested::", request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(insightService.getBusinessInsightMetrics(mediaName, publicId));
+    }
+
 
 }
