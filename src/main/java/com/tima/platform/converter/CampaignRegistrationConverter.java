@@ -6,10 +6,13 @@ import com.tima.platform.model.api.request.CampaignCreativeRecord;
 import com.tima.platform.model.api.request.CampaignInfluencerRecord;
 import com.tima.platform.model.api.request.CampaignOverviewRecord;
 import com.tima.platform.model.api.response.CampaignRegistrationRecord;
-import com.tima.platform.util.AppUtil;
+import com.tima.platform.model.api.response.campaign.PastExperience;
+import com.tima.platform.model.api.response.campaign.SearchResult;
 
 import java.util.List;
 import java.util.Objects;
+
+import static com.tima.platform.util.AppUtil.gsonInstance;
 
 /**
  * @Author: Josiah Adetayo
@@ -29,23 +32,23 @@ public class CampaignRegistrationConverter {
                 .website(dto.overview().website())
                 .plannedBudget(sanitized.overview().plannedBudget())
                 .costPerPost(sanitized.overview().costPerPost())
-                .socialMediaPlatforms(AppUtil.gsonInstance().toJson(sanitized.overview().socialMediaPlatforms()))
-                .influencerCategory(AppUtil.gsonInstance().toJson(sanitized.influencer().influencerCategory()))
-                .audienceSize(AppUtil.gsonInstance().toJson(sanitized.influencer().audienceSize()))
-                .audienceGender(AppUtil.gsonInstance().toJson(sanitized.influencer().audienceGender()))
-                .audienceAgeGroup(AppUtil.gsonInstance().toJson(sanitized.influencer().audienceAgeGroup()))
-                .audienceLocation(AppUtil.gsonInstance().toJson(sanitized.influencer().audienceLocation()))
+                .socialMediaPlatforms(gsonInstance().toJson(sanitized.overview().socialMediaPlatforms()))
+                .influencerCategory(gsonInstance().toJson(sanitized.influencer().influencerCategory()))
+                .audienceSize(gsonInstance().toJson(sanitized.influencer().audienceSize()))
+                .audienceGender(gsonInstance().toJson(sanitized.influencer().audienceGender()))
+                .audienceAgeGroup(gsonInstance().toJson(sanitized.influencer().audienceAgeGroup()))
+                .audienceLocation(gsonInstance().toJson(sanitized.influencer().audienceLocation()))
                 .paymentType(sanitized.creative().paymentType())
                 .startDate(sanitized.creative().startDate())
                 .endDate(sanitized.creative().endDate())
-                .contentType(sanitized.creative().contentType())
-                .contentPlacement(sanitized.creative().contentPlacement())
+                .contentType(gsonInstance().toJson(sanitized.creative().contentType()))
+                .contentPlacement(gsonInstance().toJson(sanitized.creative().contentPlacement()))
                 .creativeBrief(sanitized.creative().creativeBrief())
-                .creativeTone(sanitized.creative().creativeTone())
+                .creativeTone(gsonInstance().toJson(sanitized.creative().creativeTone()))
                 .rules(sanitized.creative().rules())
                 .referenceLink(sanitized.creative().referenceLink())
-                .awarenessObjective(AppUtil.gsonInstance().toJson(sanitized.creative().awarenessObjective()))
-                .acquisitionObjective(AppUtil.gsonInstance().toJson(sanitized.creative().acquisitionObjective()))
+                .awarenessObjective(gsonInstance().toJson(sanitized.creative().awarenessObjective()))
+                .acquisitionObjective(gsonInstance().toJson(sanitized.creative().acquisitionObjective()))
                 .thumbnail(sanitized.creative().thumbnail())
                 .visibility(sanitized.creative().visibility())
                 .build();
@@ -76,9 +79,9 @@ public class CampaignRegistrationConverter {
                         .creativeBrief(entity.getCreativeBrief())
                         .startDate(entity.getStartDate())
                         .endDate(entity.getEndDate())
-                        .contentType(entity.getContentType())
-                        .contentPlacement(entity.getContentPlacement())
-                        .creativeTone(entity.getCreativeTone())
+                        .contentType(json(entity.getContentType()))
+                        .contentPlacement(json(entity.getContentPlacement()))
+                        .creativeTone(json(entity.getCreativeTone()))
                         .referenceLink(entity.getReferenceLink())
                         .rules(entity.getRules())
                         .awarenessObjective(json(entity.getAwarenessObjective()))
@@ -88,6 +91,24 @@ public class CampaignRegistrationConverter {
                         .build())
                 .createdBy(entity.getCreatedBy())
                 .createdOn(entity.getCreatedOn())
+                .build();
+    }
+
+    public static synchronized PastExperience mapToExperienceRecord(CampaignRegistration entity) {
+        return PastExperience.builder()
+                .campaignBanner(entity.getThumbnail())
+                .campaignName(String.format("%s %s", entity.getBrandName(), entity.getName()))
+                .startDate(entity.getStartDate())
+                .endDate(entity.getEndDate())
+                .build();
+    }
+
+    public static synchronized SearchResult mapToSearchRecord(CampaignRegistration entity) {
+        return SearchResult.builder()
+                .campaignId(entity.getPublicId())
+                .name(entity.getName())
+                .description(entity.getBriefDescription())
+                .banner(entity.getThumbnail())
                 .build();
     }
 
@@ -103,19 +124,33 @@ public class CampaignRegistrationConverter {
                 .map(CampaignRegistrationConverter::mapToEntity)
                 .toList();
     }
-    private static List<String> json(String value) {
-        return AppUtil.gsonInstance().fromJson(value, new TypeToken<List<String>>(){}.getType());
+
+    public static synchronized List<PastExperience> mapToExperienceRecords(List<CampaignRegistration> entities) {
+        return entities
+                .stream()
+                .map(CampaignRegistrationConverter::mapToExperienceRecord)
+                .toList();
     }
 
-    private static CampaignRegistrationRecord validatePart(CampaignRegistrationRecord record) {
+    public static synchronized List<SearchResult> mapToSearchRecords(List<CampaignRegistration> entities) {
+        return entities
+                .stream()
+                .map(CampaignRegistrationConverter::mapToSearchRecord)
+                .toList();
+    }
+    private static List<String> json(String value) {
+        return gsonInstance().fromJson(value, new TypeToken<List<String>>(){}.getType());
+    }
+
+    private static CampaignRegistrationRecord validatePart(CampaignRegistrationRecord registration) {
         return CampaignRegistrationRecord
                 .builder()
-                .overview(Objects.isNull(record.overview()) ?
-                        CampaignOverviewRecord.builder().build() : record.overview())
-                .influencer(Objects.isNull(record.influencer()) ?
-                        CampaignInfluencerRecord.builder().build() : record.influencer())
-                .creative(Objects.isNull(record.creative()) ?
-                        CampaignCreativeRecord.builder().build() : record.creative())
+                .overview(Objects.isNull(registration.overview()) ?
+                        CampaignOverviewRecord.builder().build() : registration.overview())
+                .influencer(Objects.isNull(registration.influencer()) ?
+                        CampaignInfluencerRecord.builder().build() : registration.influencer())
+                .creative(Objects.isNull(registration.creative()) ?
+                        CampaignCreativeRecord.builder().build() : registration.creative())
                 .build();
     }
 }

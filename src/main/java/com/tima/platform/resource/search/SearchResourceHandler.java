@@ -2,6 +2,7 @@ package com.tima.platform.resource.search;
 
 import com.tima.platform.config.AuthTokenConfig;
 import com.tima.platform.model.api.ApiResponse;
+import com.tima.platform.service.search.CampaignSearchService;
 import com.tima.platform.service.search.InfluencerSearchService;
 import com.tima.platform.util.LoggerHelper;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import static com.tima.platform.model.api.ApiResponse.*;
 public class SearchResourceHandler {
     LoggerHelper log = LoggerHelper.newInstance(SearchResourceHandler.class.getName());
     private final InfluencerSearchService searchService;
+    private final CampaignSearchService campaignSearchService;
     private static final String X_FORWARD_FOR = "X-Forwarded-For";
 
     /**
@@ -56,7 +58,7 @@ public class SearchResourceHandler {
     public Mono<ServerResponse> getInfluencer(ServerRequest request)  {
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
         String influencerPublicId = request.pathVariable("publicId");
-        log.info("Get Influencer Bio Requested ", request.headers().firstHeader(X_FORWARD_FOR));
+        log.info("Get Influencer Bio Data Requested ", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
                 .map(ApiResponse::getToken)
                 .map(token -> searchService.getInfluencer(influencerPublicId, token))
@@ -65,10 +67,31 @@ public class SearchResourceHandler {
 
     public Mono<ServerResponse> getInfluencerByFilter(ServerRequest request)  {
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
-        log.info("Get Influencer Bio Requested ", request.headers().firstHeader(X_FORWARD_FOR));
+        log.info("Get Influencer Bio vy Filter Requested ", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
                 .map(ApiResponse::getToken)
                 .map(token -> searchService.getInfluencerByFilter(token, searchSettingsProfile(request)))
                 .flatMap(ApiResponse::buildServerResponse);
+    }
+
+    public Mono<ServerResponse> getInfluencerSearchByName(ServerRequest request)  {
+        String name = request.pathVariable("name");
+        log.info("Get Influencer Search by Name Requested ", request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(searchService.getInfluencerByName(name, reportSettings(request)));
+    }
+
+    public Mono<ServerResponse> getInfluencerByCampaignSearch(ServerRequest request)  {
+        log.info("Get Influencer Bio By Campaign search Requested ", request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(campaignSearchService.getInfluencerCampaignSearch(searchSettings(request)));
+    }
+    public Mono<ServerResponse> getInfluencerExperience(ServerRequest request)  {
+        String publicId = request.queryParam("influencerPublicId").orElse("");
+        log.info("Get Influencer Past Campaign Requested ", request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(campaignSearchService.getPastCampaigns(publicId, reportSettings(request)));
+    }
+    public Mono<ServerResponse> getCampaignSearchByName(ServerRequest request)  {
+        String name = request.pathVariable("name");
+        log.info("Get Campaign Search by Name Requested ", request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(campaignSearchService.getCampaignsByName(name, reportSettings(request)));
     }
 }

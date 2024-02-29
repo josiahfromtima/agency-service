@@ -1,14 +1,18 @@
 package com.tima.platform.service.search;
 
 import com.google.gson.reflect.TypeToken;
+import com.tima.platform.converter.CampaignRegistrationConverter;
 import com.tima.platform.converter.InfluencerApplicationConverter;
 import com.tima.platform.domain.CampaignRegistration;
 import com.tima.platform.model.api.AppResponse;
 import com.tima.platform.model.api.request.InfluencerRecord;
 import com.tima.platform.model.api.response.FullUserProfileRecord;
+import com.tima.platform.model.api.response.InfluencerApplicationRecord;
 import com.tima.platform.repository.CampaignRegistrationRepository;
 import com.tima.platform.repository.InfluencerApplicationRepository;
+import com.tima.platform.service.helper.InfluencersInsightService;
 import com.tima.platform.service.helper.UserProfileService;
+import com.tima.platform.util.CampaignSearchSetting;
 import com.tima.platform.util.InfluencerSearchSetting;
 import com.tima.platform.util.LoggerHelper;
 import com.tima.platform.util.ReportSettings;
@@ -18,8 +22,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -44,8 +50,8 @@ public class InfluencerSearchService {
     private final CampaignRegistrationRepository registrationRepository;
     private final UserProfileService profileService;
 
-    private static final String SEARCH_MSG = "Bookmark request executed successfully";
-    private static final int DAYS = 7;
+    private static final String SEARCH_MSG = "Influencer Search executed successfully";
+    private static final int DAYS = 30;
     private static final short COMPLETED = 100;
     private static final String COST_POST = "costPerPost";
 
@@ -112,6 +118,16 @@ public class InfluencerSearchService {
                 .flatMap(profileRecords -> filter(profileRecords, setting))
                 .map(profiles -> buildAppResponse(profiles, SEARCH_MSG));
     }
+
+    @PreAuthorize(ADMIN_BRAND_INFLUENCER)
+    public Mono<AppResponse> getInfluencerByName(String name, ReportSettings setting) {
+        log.info("Getting Influencer with Filter ", setting);
+        return applicationRepository.findByFullNameContainingIgnoreCase(name, setPage(setting))
+                .collectList()
+                .map(InfluencerApplicationConverter::mapToSearchRecords)
+                .map(profiles -> buildAppResponse(profiles, SEARCH_MSG));
+    }
+
 
 
     private Mono<InfluencerRecord> getCompletedJobs(String publicId, FullUserProfileRecord profileRecord) {
@@ -210,4 +226,5 @@ public class InfluencerSearchService {
     private String getParam(String item) {
         return "%"+item.toLowerCase()+"%";
     }
+
 }

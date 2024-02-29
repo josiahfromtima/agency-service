@@ -56,8 +56,11 @@ public class ApiResponse {
         return CampaignSearchSetting.instance()
                 .category(request.queryParam("category").orElse(""))
                 .audienceSize(request.queryParam("size").orElse(""))
-                .audienceAge(request.queryParam("age").orElse(""))
-                .audienceLocation(request.queryParam("location").orElse(""));
+                .audienceAge(request.queryParam("ageGroup").orElse(""))
+                .audienceLocation(request.queryParam("location").orElse(""))
+                .audienceGender(request.queryParam("gender").orElse(""))
+                .socialMediaPlatform(request.queryParam("socialMedia").orElse(""))
+                .costPerPost(Long.parseLong(request.queryParam("costPerPost").orElse("0L")));
     }
     public static InfluencerSearchSetting searchSettingsProfile(ServerRequest request) {
         return InfluencerSearchSetting.instance()

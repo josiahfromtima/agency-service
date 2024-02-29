@@ -37,6 +37,7 @@ public class ClientBusinessInsightService {
     private final ClientSocialMediaRepository mediaRepository;
     private final SocialMediaService socialMediaService;
     private final InstagramBusinessInsight instagramBusinessInsight;
+    private final DefaultSocialBusinessInsight socialBusinessInsight;
     Map<String, InsightService<?, ?, ?>> socialMediaInsights = new HashMap<>();
 
     private static final String INVALID_NAME = "Selected Social media feature is not available yet. Or name is invalid";
@@ -61,7 +62,7 @@ public class ClientBusinessInsightService {
             return handleOnErrorResume(new AppException(INVALID_NAME), BAD_REQUEST.value());
         return socialMediaService.getSocialMedia(name)
                 .flatMap(socialMedia -> mediaRepository.findByUserId(publicId)
-                        .flatMap(clientSocialMedia -> socialMediaInsights.get(name)
+                        .flatMap(clientSocialMedia -> socialMediaInsights.getOrDefault(name, socialBusinessInsight)
                                 .getUserBasicBusinessInsight(getSelectedMedia(name, clientSocialMedia),
                                         socialMedia.getAccessToken())
                         )
@@ -78,7 +79,7 @@ public class ClientBusinessInsightService {
         if(Objects.isNull(type)) return handleOnErrorResume(new AppException(INVALID_TYPE), BAD_REQUEST.value());
         return socialMediaService.getSocialMedia(name)
                 .flatMap(socialMedia ->  mediaRepository.findByUserId(publicId)
-                        .flatMap(clientSocialMedia -> socialMediaInsights.get(name)
+                        .flatMap(clientSocialMedia -> socialMediaInsights.getOrDefault(name, socialBusinessInsight)
                                 .getUserBasicBusinessInsight(getSelectedMedia(name, clientSocialMedia),
                                         socialMedia.getAccessToken(), type) )
                 ).map(businessInsight -> buildAppResponse(businessInsight, String.format(INSIGHT_MSG, name)))
@@ -90,7 +91,7 @@ public class ClientBusinessInsightService {
             if(Objects.isNull(socialMediaInsights.get(name)))
                 return handleOnErrorResume(new AppException(INVALID_NAME), BAD_REQUEST.value());
             return socialMediaService.getSocialMedia(name)
-                    .flatMap(socialMedia ->  socialMediaInsights.get(name)
+                    .flatMap(socialMedia ->  socialMediaInsights.getOrDefault(name, socialBusinessInsight)
                                     .getUserBasicBusinessInsight(build(handle), socialMedia.getAccessToken())
                     ).map(businessInsight -> buildAppResponse(businessInsight, String.format(INSIGHT_MSG, name)))
                     .switchIfEmpty(handleOnErrorResume(new AppException(ERROR_MSG), BAD_REQUEST.value()));
@@ -103,7 +104,7 @@ public class ClientBusinessInsightService {
             return handleOnErrorResume(new AppException(INVALID_NAME), BAD_REQUEST.value());
         return socialMediaService.getSocialMedia(name)
                 .flatMap(socialMedia ->  mediaRepository.findByUserId(publicId)
-                        .flatMap(clientSocialMedia -> socialMediaInsights.get(name)
+                        .flatMap(clientSocialMedia -> socialMediaInsights.getOrDefault(name, socialBusinessInsight)
                                 .getUserBusinessInsightMetrics(getSelectedMedia(name, clientSocialMedia),
                                         socialMedia.getAccessToken()) )
                 ).map(businessInsight -> buildAppResponse(businessInsight, String.format(INSIGHT_MSG, name)))

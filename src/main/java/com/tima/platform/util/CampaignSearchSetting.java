@@ -13,6 +13,9 @@ public class CampaignSearchSetting {
     private String audienceSize;
     private String audienceAge;
     private String audienceLocation;
+    private String audienceGender;
+    private String socialMediaPlatform;
+    private long costPerPost;
 
     private CampaignSearchSetting() {}
 
@@ -39,5 +42,18 @@ public class CampaignSearchSetting {
         this.audienceLocation = audienceLocation;
         return this;
     }
+    public CampaignSearchSetting audienceGender(String audienceGender) {
+        this.audienceGender = audienceGender;
+        return this;
+    }
+    public CampaignSearchSetting socialMediaPlatform(String socialMediaPlatform) {
+        this.socialMediaPlatform = socialMediaPlatform;
+        return this;
+    }
+    public CampaignSearchSetting costPerPost(long costPerPost) {
+        this.costPerPost = costPerPost;
+        return this;
+    }
+
 
 }

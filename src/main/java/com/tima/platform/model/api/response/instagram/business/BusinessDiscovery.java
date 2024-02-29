@@ -17,6 +17,9 @@ public record BusinessDiscovery(String id,
                                 @JsonProperty("followers_count")
                                 @SerializedName("followers_count")
                                 long followersCount,
+                                @JsonProperty("profile_picture_url")
+                                @SerializedName("profile_picture_url")
+                                String profilePictureUrl,
                                 @JsonProperty("media_count")
                                 @SerializedName("media_count")
                                 long mediaCount,

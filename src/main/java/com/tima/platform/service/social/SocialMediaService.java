@@ -5,11 +5,14 @@ import com.tima.platform.domain.SocialMedia;
 import com.tima.platform.exception.AppException;
 import com.tima.platform.model.api.AppResponse;
 import com.tima.platform.model.api.response.SocialMediaRecord;
+import com.tima.platform.model.api.response.instagram.token.LongLivedAccessToken;
 import com.tima.platform.repository.SocialMediaRepository;
-import com.tima.platform.service.IndustryService;
-import com.tima.platform.service.social.instagram.InstagramApiService;
+import com.tima.platform.service.social.token.DefaultTokenService;
+import com.tima.platform.service.social.token.InstagramTokenService;
+import com.tima.platform.service.social.token.TokenService;
 import com.tima.platform.util.AppError;
 import com.tima.platform.util.LoggerHelper;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,10 +21,14 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 import static com.tima.platform.exception.ApiErrorHandler.handleOnErrorResume;
 import static com.tima.platform.model.security.TimaAuthority.ADMIN;
 import static com.tima.platform.util.AppUtil.buildAppResponse;
+import static com.tima.platform.util.AppUtil.safeCast;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 /**
@@ -34,13 +41,20 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 public class SocialMediaService {
     private final LoggerHelper log = LoggerHelper.newInstance(SocialMediaService.class.getName());
     private final SocialMediaRepository mediaRepository;
-    private final InstagramApiService instagramApiService;
+    private final InstagramTokenService instagramTokenService;
+    private final DefaultTokenService defaultTokenService;
+    Map<String, TokenService<?>> socialMediaToken = new HashMap<>();
 
     @Value("${social.expires}")
     private long timeToLive;
     @Value("${social.logoPath}")
     private String awsLogoPathUrl;
     private static final long MINUS_DAYS = 5;
+
+    @PostConstruct
+    public void init() {
+        socialMediaToken.put("Instagram", instagramTokenService);
+    }
 
     private static final String SOCIAL_MSG = "Social Media request executed successfully";
     private static final String INVALID_SOCIAL= "The social media name is invalid";
@@ -64,10 +78,12 @@ public class SocialMediaService {
     @PreAuthorize(ADMIN)
     public Mono<AppResponse> addSocialMedia(SocialMediaRecord socialMediaRecord) {
         log.info("Adding new Social Media Record...");
-        return instagramApiService.getLTTLAccessToken(socialMediaRecord.accessToken())
-                .flatMap(longLivedAccessToken -> {
+        return socialMediaToken.getOrDefault(socialMediaRecord.name(), defaultTokenService)
+                .getLongLivedToken(socialMediaRecord.accessToken())
+                .flatMap(accessToken -> {
                     SocialMedia socialMedia = SocialMediaConverter.mapToEntity(socialMediaRecord);
-                    socialMedia.setAccessToken(longLivedAccessToken.accessToken());
+                    socialMedia.setAccessToken(Objects.requireNonNull(safeCast(accessToken, LongLivedAccessToken.class))
+                            .accessToken());
                     socialMedia.setExpiresIn((int) timeToLive);
                     socialMedia.setLogo(awsLogoPathUrl + "/" + socialMedia.getLogo());
                     socialMedia.setExpiresOn(Instant.now().plus(timeToLive - MINUS_DAYS, ChronoUnit.DAYS));
@@ -83,9 +99,12 @@ public class SocialMediaService {
     public Mono<AppResponse> editSocialMedia(SocialMediaRecord socialMediaRecord) {
         log.info("Editing Social Media Record... ", socialMediaRecord.name());
         return getSocialMedia(socialMediaRecord.name())
-                .flatMap(socialMedia -> instagramApiService.getLTTLAccessToken(socialMediaRecord.accessToken())
-                    .flatMap(longLivedAccessToken -> {
-                        socialMedia.setAccessToken(longLivedAccessToken.accessToken());
+                .flatMap(socialMedia -> socialMediaToken.getOrDefault(socialMediaRecord.name(), defaultTokenService)
+                        .getLongLivedToken(socialMediaRecord.accessToken())
+                    .flatMap(accessToken -> {
+                        socialMedia.setAccessToken(Objects.requireNonNull(
+                                safeCast(accessToken, LongLivedAccessToken.class))
+                                .accessToken());
                         socialMedia.setLogo(socialMediaRecord.logo());
                         socialMedia.setExpiresOn(Instant.now().plus(timeToLive - MINUS_DAYS, ChronoUnit.DAYS));
                         return mediaRepository.save(socialMedia);
@@ -105,6 +124,7 @@ public class SocialMediaService {
     }
 
     public Mono<SocialMedia> getSocialMedia(String name) {
+        log.info("Get Info for ", name);
         return mediaRepository.findByName(name)
                 .switchIfEmpty(handleOnErrorResume(new AppException(INVALID_SOCIAL), BAD_REQUEST.value()));
     }

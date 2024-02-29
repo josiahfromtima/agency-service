@@ -25,15 +25,15 @@ public record CampaignCreativeRecord( @NotNull(message = "Payment Type is Requir
                                               "Should be today or future date")
                                       LocalDate endDate,
                                      @NotNull(message = "Content Type is Required")
-                                      String contentType,
+                                      List<String> contentType,
                                      @NotNull(message = "Content Placement is Required")
-                                      String contentPlacement,
+                                      List<String> contentPlacement,
                                      @NotNull(message = "Creative Brief is Required")
                                       String creativeBrief,
                                      @NotNull(message = "Rules is Required")
                                       String rules,
                                      @NotNull(message = "Creative Tone is Required")
-                                      String creativeTone,
+                                      List<String> creativeTone,
                                      String referenceLink,
                                      @NotNull(message = "Awareness Object is Required")
                                       List<@NotBlank String> awarenessObjective,

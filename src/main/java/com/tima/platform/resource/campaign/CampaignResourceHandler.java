@@ -11,6 +11,7 @@ import com.tima.platform.service.CampaignAggregateService;
 import com.tima.platform.service.CampaignRegistrationService;
 import com.tima.platform.service.InfluencerApplicationService;
 import com.tima.platform.service.aws.s3.AwsS3Service;
+import com.tima.platform.service.dashboard.CampaignDashboardService;
 import com.tima.platform.util.LoggerHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,12 +36,17 @@ public class CampaignResourceHandler {
     private final CampaignRegistrationService registrationService;
     private final InfluencerApplicationService applicationService;
     private final CampaignAggregateService aggregateService;
+    private final CampaignDashboardService dashboardService;
     private final CustomValidator validator;
 
     @Value("${aws.s3.resource.thumbnail}")
     private String thumbnailFolder;
 
     private static final String X_FORWARD_FOR = "X-Forwarded-For";
+    private static final String CAMPAIGN_ID = "campaignPublicId";
+    private static final String STATUS = "status";
+    private static final String APPLICATION_ID = "applicationId";
+
 
     /**
      *  This section is the user generated signed URL
@@ -80,7 +86,7 @@ public class CampaignResourceHandler {
 
     public Mono<ServerResponse> getRegistrationByStatus(ServerRequest request)  {
         String brandName = request.queryParam("brand").orElse(null);
-        short status = Short.parseShort(request.queryParam("status").orElse("0"));
+        short status = Short.parseShort(request.queryParam(STATUS).orElse("0"));
         log.info("Get Campaigns By Stats and/orBrand Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return buildServerResponse(
                 registrationService.getCampaigns(status, brandName, reportSettings(request)));
@@ -171,18 +177,18 @@ public class CampaignResourceHandler {
     }
 
     public Mono<ServerResponse> getApplication(ServerRequest request)  {
-        String applicationId = request.pathVariable("applicationId");
+        String applicationId = request.pathVariable(APPLICATION_ID);
         log.info("Get Influencer Application Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return buildServerResponse(applicationService.getApplication(applicationId));
     }
 
     public Mono<ServerResponse> getApplicationByStatus(ServerRequest request)  {
-        String status = request.pathVariable("status");
+        String status = request.pathVariable(STATUS);
         log.info("Get Influencer Application By Status Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return buildServerResponse(applicationService.getApplicationsByStatus(status, reportSettings(request)) );
     }
     public Mono<ServerResponse> getApplicationByStatusAndCampaign(ServerRequest request)  {
-        String status = request.queryParam("status").orElse("PENDING");
+        String status = request.queryParam(STATUS).orElse("PENDING");
         String campaignId = request.queryParam("campaignId").orElse("");
         log.info("Get Influencer Application By Status and Campaign Requested",
                 request.headers().firstHeader(X_FORWARD_FOR));
@@ -224,7 +230,7 @@ public class CampaignResourceHandler {
 
     public Mono<ServerResponse> reviewApplication(ServerRequest request)  {
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
-        String appId = request.queryParam("applicationId").orElse("");
+        String appId = request.queryParam(APPLICATION_ID).orElse("");
         String reviewStatus = request.pathVariable("reviewStatus");
         log.info("Review Application Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
@@ -234,8 +240,24 @@ public class CampaignResourceHandler {
     }
 
     public Mono<ServerResponse> deleteApplication(ServerRequest request)  {
-        String applicationId = request.pathVariable("applicationId");
+        String applicationId = request.pathVariable(APPLICATION_ID);
         log.info("Delete Application Requested", applicationId, request.headers().firstHeader(X_FORWARD_FOR));
         return buildServerResponse(applicationService.deleteApplication(applicationId));
+    }
+    public Mono<ServerResponse> getDashboardKpi(ServerRequest request)  {
+        String campaignId = request.pathVariable(CAMPAIGN_ID);
+        log.info("Get Campaign Dashboard Kpi  Requested", request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(dashboardService.getKpi(campaignId));
+    }
+
+    public Mono<ServerResponse> getDashboardSummary(ServerRequest request)  {
+        String campaignId = request.pathVariable(CAMPAIGN_ID);
+        log.info("Get Campaign Interaction Summary Dashboard Requested", request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(dashboardService.getInteractionSummary(campaignId));
+    }
+    public Mono<ServerResponse> getDashboardDistribution(ServerRequest request)  {
+        String campaignId = request.pathVariable(CAMPAIGN_ID);
+        log.info("Get Campaign Audience Distribution Dashboard Requested", request.headers().firstHeader(X_FORWARD_FOR));
+        return buildServerResponse(dashboardService.getDistributionSummary(campaignId));
     }
 }

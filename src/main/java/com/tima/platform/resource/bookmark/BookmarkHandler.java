@@ -72,8 +72,9 @@ public class BookmarkHandler {
         Mono<JwtAuthenticationToken> jwtAuthToken = AuthTokenConfig.authenticatedToken(request);
         log.info("Get Influencer Bookmarks Requested", request.headers().firstHeader(X_FORWARD_FOR));
         return jwtAuthToken
-                .map(ApiResponse::getPublicIdFromToken)
-                .map(id -> bookmarkService.getInstance(INFLUENCER.getType()).getBookmarks(id, reportSettings(request)))
+                .map(ApiResponse::getJwtRecord)
+                .map(jwt -> bookmarkService.getInstance(INFLUENCER.getType())
+                        .getBookmarks(jwt.token(), jwt.publicId(), reportSettings(request)))
                 .flatMap(ApiResponse::buildServerResponse);
     }
 

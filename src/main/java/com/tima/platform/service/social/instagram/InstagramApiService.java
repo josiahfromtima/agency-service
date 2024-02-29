@@ -32,6 +32,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.tima.platform.model.constant.AppConstant.*;
 import static com.tima.platform.util.AppUtil.buildAppResponse;
@@ -138,13 +139,16 @@ public class InstagramApiService {
 
     private Mono<BasicBusinessInsight> calculateMedia(BusinessSummary businessSummary) {
         Map<String, Long> counts = new ConcurrentHashMap<>();
+        AtomicInteger counter = new AtomicInteger(0);
         counts.put(COMMENTS, 0L);
         counts.put(LIKES, 0L);
+
         businessSummary
                 .businessDiscovery()
                 .media()
                 .data()
-                .forEach(mediaItem -> reduce(mediaItem, counts));
+                .forEach(mediaItem -> reduce(mediaItem, counts, counter));
+        log.info("\nTotal Interaction Count ", counter.get());
         return Mono.just(BasicBusinessInsight.builder()
                         .businessOwnerIgId(businessSummary.id())
                         .businessIgId(businessSummary.businessDiscovery().id())
@@ -152,19 +156,31 @@ public class InstagramApiService {
                         .businessName(businessSummary.businessDiscovery().name())
                         .biography(businessSummary.businessDiscovery().biography())
                         .website(businessSummary.businessDiscovery().website())
+                        .profilePictureUrl(businessSummary.businessDiscovery().profilePictureUrl())
                         .followers(businessSummary.businessDiscovery().followersCount())
                         .totalMedia(businessSummary.businessDiscovery().mediaCount())
                         .totalComments(counts.get(COMMENTS))
+                        .avgComments(average(counts.get(COMMENTS), counter.get()))
                         .totalLikes(counts.get(LIKES))
+                        .avgLikes(average(counts.get(LIKES), counter.get()))
                         .avgEngagement(calculateEngagementRate(
                                 counts.get(COMMENTS)+counts.get(LIKES),
                                 businessSummary.businessDiscovery().followersCount()) )
                 .build() );
     }
 
-    private void reduce(MediaItem mediaItem, Map<String, Long> accumulator) {
+    private void reduce(MediaItem mediaItem, Map<String, Long> accumulator, AtomicInteger counter) {
+        counter.getAndIncrement();
         accumulator.put(COMMENTS, accumulator.get(COMMENTS) + mediaItem.commentsCount());
         accumulator.put(LIKES, accumulator.get(LIKES) + mediaItem.likeCount());
+    }
+
+    private long average(long total, int count) {
+        if(count == 0) return 0L;
+        return BigDecimal.valueOf(total)
+                .divide(BigDecimal.valueOf(count), RoundingMode.HALF_EVEN)
+                .setScale(1, RoundingMode.UP)
+                .longValue();
     }
 
     private MeAccount convert(GraphApi<MeAccount> graphApi) {
@@ -176,8 +192,8 @@ public class InstagramApiService {
         log.info("Engagements ", totalEngagements, " Followers ", totalFollowers);
         if(totalFollowers == 0) return BigDecimal.ZERO;
         return BigDecimal.valueOf((double) totalEngagements / totalFollowers)
-                .multiply(new BigDecimal("100"))
-                .setScale(2, RoundingMode.UP);
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(2, RoundingMode.HALF_EVEN);
     }
 
     private Mono<FollowerDemographic> toDemographic(GraphApi<Demographic> graphApi) {

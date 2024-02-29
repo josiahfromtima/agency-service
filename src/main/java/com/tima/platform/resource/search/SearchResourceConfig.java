@@ -19,10 +19,14 @@ public class SearchResourceConfig {
     public static final String API_V1_URL = "/v1";
     public static final String SEARCH_BASE = API_V1_URL + "/influencer/search";
     public static final String TOP_CATEGORIES = SEARCH_BASE + "/categories";
+    public static final String GET_INFLUENCERS_BY_CAMPAIGN = SEARCH_BASE + "/campaign";
     public static final String INFLUENCER_CATEGORY = SEARCH_BASE + "/categories/{category}";
     public static final String TOP_INFLUENCER = SEARCH_BASE + "/top";
     public static final String NEW_INFLUENCER = SEARCH_BASE + "/latest";
     public static final String GET_INFLUENCER = SEARCH_BASE + "/id/{publicId}";
+    public static final String GET_INFLUENCER_EXPERIENCE = SEARCH_BASE + "/experiences";
+    public static final String GET_CAMPAIGN_BY_NAME = GET_INFLUENCERS_BY_CAMPAIGN + "/{name}";
+    public static final String GET_INFLUENCERS_BY_NAME = SEARCH_BASE + "/name/{name}";
     public static final String GET_INFLUENCER_WITH_FILTER = SEARCH_BASE;
 
     @Bean
@@ -34,6 +38,11 @@ public class SearchResourceConfig {
                 .GET(NEW_INFLUENCER, accept(MediaType.APPLICATION_JSON), handler::getNewInfluencers)
                 .GET(GET_INFLUENCER, accept(MediaType.APPLICATION_JSON), handler::getInfluencer)
                 .GET(GET_INFLUENCER_WITH_FILTER, accept(MediaType.APPLICATION_JSON), handler::getInfluencerByFilter)
+                .GET(GET_INFLUENCERS_BY_CAMPAIGN, accept(MediaType.APPLICATION_JSON),
+                        handler::getInfluencerByCampaignSearch)
+                .GET(GET_INFLUENCER_EXPERIENCE, accept(MediaType.APPLICATION_JSON), handler::getInfluencerExperience)
+                .GET(GET_CAMPAIGN_BY_NAME, accept(MediaType.APPLICATION_JSON), handler::getCampaignSearchByName)
+                .GET(GET_INFLUENCERS_BY_NAME, accept(MediaType.APPLICATION_JSON), handler::getInfluencerSearchByName)
                 .build();
     }
 }

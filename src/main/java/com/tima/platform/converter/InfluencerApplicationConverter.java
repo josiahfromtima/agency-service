@@ -3,6 +3,7 @@ package com.tima.platform.converter;
 import com.tima.platform.domain.InfluencerApplication;
 import com.tima.platform.model.api.request.InfluencerRecord;
 import com.tima.platform.model.api.response.InfluencerApplicationRecord;
+import com.tima.platform.model.api.response.campaign.SearchResult;
 import com.tima.platform.model.constant.ApplicationStatus;
 
 import java.util.List;
@@ -70,6 +71,14 @@ public class InfluencerApplicationConverter {
                 .build();
     }
 
+    public static synchronized SearchResult mapToSearchRecord(InfluencerApplication entity) {
+        return SearchResult.builder()
+                .influencerPublicId(entity.getSubmittedBy())
+                .name(entity.getUsername())
+                .profilePicture(entity.getProfilePicture())
+                .build();
+    }
+
     public static synchronized List<InfluencerApplicationRecord> mapToRecords(List<InfluencerApplication> entities) {
         return entities
                 .stream()
@@ -87,6 +96,12 @@ public class InfluencerApplicationConverter {
         return entities
                 .stream()
                 .map(InfluencerApplicationConverter::mapToInfluencer)
+                .toList();
+    }
+    public static synchronized List<SearchResult> mapToSearchRecords(List<InfluencerApplication> entities) {
+        return entities
+                .stream()
+                .map(InfluencerApplicationConverter::mapToSearchRecord)
                 .toList();
     }
 

@@ -13,8 +13,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
-import static com.tima.platform.repository.projection.NativeSql.CAMPAIGN_SEARCH_WITH_FILTER;
-import static com.tima.platform.repository.projection.NativeSql.RECOMMENDED_CAMPAIGN_STATEMENT;
+import static com.tima.platform.repository.projection.NativeSql.*;
 
 /**
  * @Author: Josiah Adetayo
@@ -23,7 +22,6 @@ import static com.tima.platform.repository.projection.NativeSql.RECOMMENDED_CAMP
  */
 public interface CampaignRegistrationRepository extends ReactiveCrudRepository<CampaignRegistration, Integer> {
     Mono<CampaignRegistration> findByPublicId(String publicId);
-
     Flux<CampaignRegistration> findAllBy(Pageable pageable);
 
     Flux<CampaignRegistration> findByEndDateAfterOrEndDate(LocalDate today, LocalDate thisDay);
@@ -31,6 +29,7 @@ public interface CampaignRegistrationRepository extends ReactiveCrudRepository<C
     Flux<CampaignRegistration> findByBrandName(String name, Pageable pageable);
     Flux<CampaignRegistration> findByStatusLessThanEqual(short status, Pageable pageable);
     Flux<CampaignRegistration> findByBrandNameAndStatusLessThanEqual(String name, short status, Pageable pageable);
+    Flux<CampaignRegistration> findByPublicIdAndStatus(String name, short status);
     Flux<CampaignRegistration> findByCreatedBy(String publicId);
     Flux<CampaignRegistration> findByCreatedOnAfter(Instant startDate, Pageable page);
     Flux<CampaignRegistration> findByStatusAndPublicId(Short completed, String publicId);
@@ -39,6 +38,16 @@ public interface CampaignRegistrationRepository extends ReactiveCrudRepository<C
 
     @Query(CAMPAIGN_SEARCH_WITH_FILTER)
     Flux<CampaignRegistration> getSearchResult(String category, String size, String age, String location);
+    @Query(CAMPAIGN_SEARCH_2_WITH_FILTER)
+    Flux<CampaignRegistration> getSearchResult2(String category,
+                                                String size,
+                                                String age,
+                                                String location,
+                                                String gender,
+                                                String media,
+                                                BigDecimal cost);
+
+    Flux<CampaignRegistration> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
 
 }

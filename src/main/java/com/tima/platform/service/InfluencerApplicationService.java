@@ -13,6 +13,7 @@ import com.tima.platform.model.constant.AlertType;
 import com.tima.platform.model.constant.ApplicationStatus;
 import com.tima.platform.repository.CampaignRegistrationRepository;
 import com.tima.platform.repository.InfluencerApplicationRepository;
+import com.tima.platform.service.helper.InfluencersInsightService;
 import com.tima.platform.service.helper.UserProfileService;
 import com.tima.platform.util.AppError;
 import com.tima.platform.util.AppUtil;
@@ -24,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -46,6 +48,7 @@ public class InfluencerApplicationService {
     private final InfluencerApplicationRepository applicationRepository;
     private final CampaignRegistrationRepository registrationRepository;
     private final UserProfileService userProfileService;
+    private final InfluencersInsightService insightService;
     private final AlertEvent alertEvent;
 
     private static final String APPLICATION_MSG = "Application request executed successfully";
@@ -98,11 +101,18 @@ public class InfluencerApplicationService {
         log.info(String.format("Getting Influencer Application Records by %s and %s", appStatus, campaignId));
         ApplicationStatus status = parseStatus(appStatus);
         if(Objects.isNull(status)) return handleOnErrorResume(new AppException(INVALID_STATUS), BAD_REQUEST.value());
-        return applicationRepository.findByStatusAndCampaignPublicId(status, campaignId, setPage(settings))
+        Flux<InfluencerApplicationRecord> applicationRecordsFlux
+                = applicationRepository.findByStatusAndCampaignPublicId(status, campaignId, setPage(settings))
                 .flatMap(this::addBanner)
-                .collectList()
-                .map(InfluencerApplicationConverter::mapToRecords)
-                .map(applicationRecords -> AppUtil.buildAppResponse(applicationRecords, APPLICATION_MSG));
+                .map(InfluencerApplicationConverter::mapToRecord);
+        return (status.equals(ApplicationStatus.APPROVED)) ?
+                applicationRecordsFlux
+                        .flatMap(insightService::getInfluencers)
+                        .collectList()
+                        .map(applicationRecords -> AppUtil.buildAppResponse(applicationRecords, APPLICATION_MSG)) :
+                applicationRecordsFlux
+                        .collectList()
+                        .map(applicationRecords -> AppUtil.buildAppResponse(applicationRecords, APPLICATION_MSG));
     }
 
     @PreAuthorize(ADMIN_BRAND_INFLUENCER)

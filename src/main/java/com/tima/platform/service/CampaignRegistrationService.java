@@ -209,7 +209,7 @@ public class CampaignRegistrationService {
     }
 
     private Flux<CampaignRegistration> getRegistrationSearch(CampaignSearchSetting setting) {
-        log.info("Searchimg with filter ", setting);
+        log.info("Searching with filter ", setting);
         setting.setCategory(padSearchParam(setting.getCategory()));
         setting.setAudienceAge(padSearchParam(setting.getAudienceAge()));
         setting.setAudienceSize(padSearchParam(setting.getAudienceSize()));
@@ -249,9 +249,9 @@ public class CampaignRegistrationService {
                                 .paymentType(jsonNode.at("/paymentType").asText())
                                 .startDate(localDate(jsonNode.at("/startDate").asText()))
                                 .endDate(localDate(jsonNode.at("/endDate").asText()))
-                                .contentType(jsonNode.at("/contentType").asText())
-                                .contentPlacement(jsonNode.at("/contentPlacement").asText())
-                                .creativeTone(jsonNode.at("/creativeTone").asText())
+                                .contentType(json(jsonNode.at("/contentType").asText()))
+                                .contentPlacement(json(jsonNode.at("/contentPlacement").asText()))
+                                .creativeTone(json(jsonNode.at("/creativeTone").asText()))
                                 .creativeBrief(jsonNode.at("/creativeBrief").asText())
                                 .rules(jsonNode.at("/rules").asText())
                                 .referenceLink(jsonNode.at("/referenceLink").asText())

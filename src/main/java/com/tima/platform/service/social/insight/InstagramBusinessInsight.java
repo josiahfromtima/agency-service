@@ -117,7 +117,6 @@ public class InstagramBusinessInsight
 
         Set<String> dataPoints = new HashSet<>(data.keySet());
         List<String> dataPointList = dataPoints.stream().sorted().toList();
-        log.info("dataPoints ", dataPoints);
 
         dataPointList.forEach(s -> {
             long value = data.getOrDefault(s, 0L);

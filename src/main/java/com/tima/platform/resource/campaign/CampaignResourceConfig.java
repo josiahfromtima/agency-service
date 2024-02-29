@@ -27,6 +27,9 @@ public class CampaignResourceConfig {
     public static final String RECOMMENDED_CAMPAIGNS = CAMPAIGN_BASE + "/search/recommendation";
     public static final String TOTAL_BUDGET_CAMPAIGNS = CAMPAIGN_BASE + "/budget/total";
     public static final String GET_CAMPAIGN = CAMPAIGN_BASE + "/{publicId}";
+    public static final String GET_CAMPAIGN_KPI = CAMPAIGN_BASE + "/dashboard/kpi/{campaignPublicId}";
+    public static final String GET_CAMPAIGN_INTERACTION = CAMPAIGN_BASE + "/dashboard/interaction/{campaignPublicId}";
+    public static final String GET_CAMPAIGN_DISTRIBUTION = CAMPAIGN_BASE + "/dashboard/distribution/{campaignPublicId}";
     public static final String GET_CAMPAIGN_BY_BRAND = CAMPAIGN_BASE + "/brand/{brand}";
     public static final String GET_CAMPAIGN_BY_STATUS = CAMPAIGN_BASE + "/search/status";
     public static final String CREATE_SEGMENT = CAMPAIGN_BASE + "/{segment}";
@@ -52,6 +55,9 @@ public class CampaignResourceConfig {
                 .GET(TOTAL_BUDGET_CAMPAIGNS, accept(MediaType.APPLICATION_JSON), handler::getTotalBudget)
                 .GET(GET_CAMPAIGN_BY_BRAND, accept(MediaType.APPLICATION_JSON), handler::getRegistrationByBrand)
                 .GET(GET_CAMPAIGN_BY_STATUS, accept(MediaType.APPLICATION_JSON), handler::getRegistrationByStatus)
+                .GET(GET_CAMPAIGN_KPI, accept(MediaType.APPLICATION_JSON), handler::getDashboardKpi)
+                .GET(GET_CAMPAIGN_INTERACTION, accept(MediaType.APPLICATION_JSON), handler::getDashboardSummary)
+                .GET(GET_CAMPAIGN_DISTRIBUTION, accept(MediaType.APPLICATION_JSON), handler::getDashboardDistribution)
                 .POST(CAMPAIGN_BASE, accept(MediaType.APPLICATION_JSON)
                         .and(contentType(MediaType.APPLICATION_JSON)), handler::addCampaign)
                 .PUT(CREATE_SEGMENT, accept(MediaType.APPLICATION_JSON)

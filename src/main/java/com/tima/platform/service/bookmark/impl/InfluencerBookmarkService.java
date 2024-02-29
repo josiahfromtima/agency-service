@@ -1,6 +1,7 @@
 package com.tima.platform.service.bookmark.impl;
 
 import com.tima.platform.converter.BookmarkConverter;
+import com.tima.platform.converter.InfluencerApplicationConverter;
 import com.tima.platform.domain.Bookmark;
 import com.tima.platform.exception.AppException;
 import com.tima.platform.model.api.AppResponse;
@@ -9,7 +10,9 @@ import com.tima.platform.model.api.response.BookmarkRecord;
 import com.tima.platform.model.api.response.FullUserProfileRecord;
 import com.tima.platform.model.constant.BookmarkType;
 import com.tima.platform.repository.BookmarkRepository;
+import com.tima.platform.repository.InfluencerApplicationRepository;
 import com.tima.platform.service.bookmark.BookmarkFactory;
+import com.tima.platform.service.helper.InfluencersInsightService;
 import com.tima.platform.service.helper.UserProfileService;
 import com.tima.platform.util.AppError;
 import com.tima.platform.util.AppUtil;
@@ -38,7 +41,9 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 public class InfluencerBookmarkService implements BookmarkFactory<AppResponse> {
     private final LoggerHelper log = LoggerHelper.newInstance(InfluencerBookmarkService.class.getName());
     private final BookmarkRepository bookmarkRepository;
+    private final InfluencerApplicationRepository applicationRepository;
     private final UserProfileService profileService;
+    private final InfluencersInsightService insightService;
 
     private static final String BOOKMARK_MSG = "Bookmark request executed successfully";
     private static final String INVALID_BOOKMARK = "The Bookmark with that title is invalid";
@@ -63,10 +68,11 @@ public class InfluencerBookmarkService implements BookmarkFactory<AppResponse> {
 
     @PreAuthorize(ADMIN_BRAND_INFLUENCER)
     public Mono<AppResponse> getBookmarks(String token, String publicId, ReportSettings settings) {
-        log.info("Getting Campaign Bookmarks ", publicId);
+        log.info("Getting Influencer Bookmarks ", publicId);
         return bookmarkRepository.findByUserPublicIdAndType(publicId, BookmarkType.INFLUENCER.getType(), setPage(settings))
-                .flatMap(bookmark -> profileService.getUserProfile(token, bookmark.getBookmarkPublicId()))
-                .flatMap(this::convertFrom)
+                .flatMap(bookmark -> applicationRepository.findByApplicationId(bookmark.getBookmarkPublicId()))
+                .map(InfluencerApplicationConverter::mapToRecord)
+                .flatMap(insightService::getInfluencers)
                 .collectList()
                 .map(indRecord -> AppUtil.buildAppResponse(indRecord, BOOKMARK_MSG));
     }
@@ -81,7 +87,7 @@ public class InfluencerBookmarkService implements BookmarkFactory<AppResponse> {
 
     @PreAuthorize(ADMIN_BRAND_INFLUENCER)
     public Mono<AppResponse> deleteBookmark(String title) {
-        log.info("Delete  Campaign Bookmark Record  ", title);
+        log.info("Delete  Influencer Bookmark Record  ", title);
         return getBookmark(title)
                 .flatMap(bookmarkRepository::delete)
                 .then(Mono.fromCallable(() -> AppUtil.buildAppResponse(title + " Deleted", BOOKMARK_MSG)));
@@ -97,16 +103,16 @@ public class InfluencerBookmarkService implements BookmarkFactory<AppResponse> {
                 Sort.Direction.fromString(settings.getSortIn()), settings.getSortBy());
     }
 
-    private Mono<InfluencerRecord> convertFrom(FullUserProfileRecord profileRecord) {
-        return Mono.just(
-                InfluencerRecord.builder()
-                .publicId(profileRecord.publicId())
-                .username(profileRecord.username())
-                .fullName(profileRecord.profile().firstName()+" "+profileRecord.profile().lastName())
-                .email(profileRecord.profile().email())
-                .phoneNumber(profileRecord.profile().phoneNumber())
-                .profilePicture(profileRecord.profile().profilePicture())
-                .build()
-        );
-    }
+//    private Mono<InfluencerRecord> convertFrom(FullUserProfileRecord profileRecord) {
+//        return Mono.just(
+//                InfluencerRecord.builder()
+//                .publicId(profileRecord.publicId())
+//                .username(profileRecord.username())
+//                .fullName(profileRecord.profile().firstName()+" "+profileRecord.profile().lastName())
+//                .email(profileRecord.profile().email())
+//                .phoneNumber(profileRecord.profile().phoneNumber())
+//                .profilePicture(profileRecord.profile().profilePicture())
+//                .build()
+//        );
+//    }
 }

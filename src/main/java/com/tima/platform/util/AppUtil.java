@@ -3,9 +3,8 @@ package com.tima.platform.util;
 import com.google.gson.Gson;
 import com.tima.platform.model.api.AppResponse;
 
-import java.util.Objects;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
+
 /**
  * @Author: Josiah Adetayo
  * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
@@ -89,5 +88,20 @@ public class AppUtil {
     }
     public static String getUUID() {
         return UUID.randomUUID().toString();
+    }
+
+    public static <T> List<T> safeCastList(List<?> list, Class<T> clazz) {
+        List<T> convertedList = new ArrayList<>();
+        if(Objects.nonNull(list) && !list.isEmpty() && clazz.isInstance(list.get(0)) ) {
+            list.forEach(o -> {
+                if (clazz.isInstance(o)) convertedList.add(clazz.cast(o));
+            });
+            return convertedList;
+        }
+        return new ArrayList<>();
+    }
+    public static <T> T safeCast(Object object, Class<T> clazz) {
+        return (Objects.nonNull(object) && clazz.isInstance(object)) ?
+                clazz.cast(object) : null;
     }
 }

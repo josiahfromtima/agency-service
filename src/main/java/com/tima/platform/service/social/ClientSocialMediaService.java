@@ -7,21 +7,29 @@ import com.tima.platform.exception.AppException;
 import com.tima.platform.model.api.AppResponse;
 import com.tima.platform.model.api.request.ClientSelectedSocialMedia;
 import com.tima.platform.model.api.response.ClientSocialMediaRecord;
+import com.tima.platform.model.api.response.instagram.token.LongLivedAccessToken;
 import com.tima.platform.repository.ClientSocialMediaRepository;
+import com.tima.platform.service.social.token.DefaultTokenService;
+import com.tima.platform.service.social.token.InstagramTokenService;
+import com.tima.platform.service.social.token.TokenService;
 import com.tima.platform.util.AppError;
 import com.tima.platform.util.LoggerHelper;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.tima.platform.converter.ClientSocialMediaConverter.json;
 import static com.tima.platform.exception.ApiErrorHandler.handleOnErrorResume;
 import static com.tima.platform.model.security.TimaAuthority.ADMIN_INFLUENCER;
 import static com.tima.platform.util.AppUtil.buildAppResponse;
+import static com.tima.platform.util.AppUtil.safeCast;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 /**
@@ -36,7 +44,13 @@ public class ClientSocialMediaService {
     private final ClientSocialMediaRepository mediaRepository;
     private final SocialMediaService mediaService;
     private final AbstractHandleService handleService;
-
+    private final InstagramTokenService instagramTokenService;
+    private final DefaultTokenService defaultTokenService;
+    Map<String, TokenService<?>> socialMediaToken = new HashMap<>();
+    @PostConstruct
+    public void init() {
+        socialMediaToken.put("Instagram", instagramTokenService);
+    }
     private static final String SOCIAL_MSG = "User Selected Social Media request executed successfully";
     private static final String INVALID_NAME = "User has no linked social media account";
     private static final String INVALID_SOCIAL_NAME = "Social media name is not linked to your user account";
@@ -81,10 +95,24 @@ public class ClientSocialMediaService {
         return mediaService.getSocialMedia(name);
     }
     private Mono<ClientSocialMediaRecord> buildRecord(String publicId, ClientSelectedSocialMedia media) {
-        log.info("build Record: ", media);
+        log.info("Create User Media Link Record: ", media);
+        return socialMediaToken.getOrDefault(media.name(), defaultTokenService)
+                .getLongLivedToken(media.accessToken())
+                .flatMap(accessToken -> buildRecord(publicId,
+                        Objects.requireNonNull(safeCast(accessToken, LongLivedAccessToken.class))
+                        .accessToken(), media));
+    }
+    private Mono<ClientSocialMediaRecord> buildRecord(String publicId, String token, ClientSelectedSocialMedia media) {
+        log.info("Rebuild User Media Link Record: ", media);
         return Mono.just(ClientSocialMediaRecord.builder()
                         .userId(publicId)
-                        .selectedSocialMedia(List.of(media))
+                        .selectedSocialMedia(List.of(ClientSelectedSocialMedia.builder()
+                                        .name(media.name())
+                                        .businessId(media.businessId())
+                                        .handle(media.handle())
+                                        .logo(media.logo())
+                                        .accessToken(token)
+                                .build()))
                 .build());
     }
     private Mono<ClientSocialMedia> addOrEdit(String publicId, ClientSelectedSocialMedia media) {
