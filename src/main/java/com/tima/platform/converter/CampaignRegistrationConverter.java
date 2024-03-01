@@ -96,6 +96,7 @@ public class CampaignRegistrationConverter {
 
     public static synchronized PastExperience mapToExperienceRecord(CampaignRegistration entity) {
         return PastExperience.builder()
+                .campaignId(entity.getPublicId())
                 .campaignBanner(entity.getThumbnail())
                 .campaignName(String.format("%s %s", entity.getBrandName(), entity.getName()))
                 .startDate(entity.getStartDate())

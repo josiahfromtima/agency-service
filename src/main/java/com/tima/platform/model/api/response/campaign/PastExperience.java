@@ -10,4 +10,5 @@ import java.time.LocalDate;
  * @Date: 2/29/24
  */
 @Builder
-public record PastExperience(String campaignName, String campaignBanner, LocalDate startDate, LocalDate endDate) {}
+public record PastExperience(String campaignId, String campaignName, String campaignBanner,
+                             LocalDate startDate, LocalDate endDate) {}
